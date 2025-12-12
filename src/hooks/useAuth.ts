@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { useAuthStore } from "../store/authStore";
-import { authService } from "../services/authService";
-import type { LoginCredentials } from "../types/auth.types";
+import { useAuthStore } from "@store/authStore";
+import { authService } from "@services/authService";
+import type { LoginCredentials } from "@/types/auth.types";
 
 export function useLogin() {
   const [, setLocation] = useLocation();
@@ -17,8 +17,8 @@ export function useLogin() {
       toast.success("¡Bienvenido!");
       setLocation("/dashboard");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Error al iniciar sesión");
+    onError: () => {
+      toast.error("Error al iniciar sesión");
     },
   });
 }

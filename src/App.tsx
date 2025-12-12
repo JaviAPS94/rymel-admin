@@ -1,9 +1,10 @@
 import { Route, Switch, Redirect } from "wouter";
 import { Toaster } from "sonner";
-import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { useAuthStore } from "./store/authStore";
+import { LoginPage } from "@pages/LoginPage";
+import { DashboardPage } from "@pages/DashboardPage";
+import { UsersPage } from "@pages/UsersPage";
+import { ProtectedRoute } from "@components/ProtectedRoute";
+import { useAuthStore } from "@store/authStore";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -18,6 +19,12 @@ const App = () => {
         <Route path="/dashboard">
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/users">
+          <ProtectedRoute>
+            <UsersPage />
           </ProtectedRoute>
         </Route>
 

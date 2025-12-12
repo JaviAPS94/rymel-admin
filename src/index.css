@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-rymel-blue: #1b1363;
+  --color-rymel-yellow: #d4c034;
+  --color-primary-foreground: #fcfcfc;
+  --color-accent: #0086e3;
+  --color-background: #f9f9f9;
+  --color-foreground: #1a1a1a;
+  --color-muted: #6b7280;
+  --color-muted-foreground: #60607a;
+  --color-input: #e5e7eb;
+}

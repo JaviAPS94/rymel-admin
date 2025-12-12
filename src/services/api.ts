@@ -39,9 +39,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
-      localStorage.removeItem("auth-storage");
-      window.location.href = "/login";
+      // Solo redirigir si no estamos en la página de login
+      const isLoginPage = window.location.pathname === "/login";
+      if (!isLoginPage) {
+        // Token expirado o inválido
+        localStorage.removeItem("auth-storage");
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

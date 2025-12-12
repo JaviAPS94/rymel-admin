@@ -1,110 +1,101 @@
-import { useState, type FormEvent } from "react";
-import { IconLock, IconMail } from "@tabler/icons-react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
-import { useLogin } from "../hooks/useAuth";
+  IconChartBar,
+  IconLock,
+  IconSettings,
+  IconShieldCheckFilled,
+} from "@tabler/icons-react";
+import { LoginForm } from "@components/LoginForm";
 
 export const LoginPage = () => {
-  const loginMutation = useLogin();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
-  );
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-
-    // Validación simple
-    const newErrors: { email?: string; password?: string } = {};
-    if (!formData.email) newErrors.email = "El email es requerido";
-    if (!formData.password) newErrors.password = "La contraseña es requerida";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    loginMutation.mutate(formData);
-  };
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Ingresa tus credenciales para acceder al administrador de recursos
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <div className="relative">
-                <IconMail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="usuario@ejemplo.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  error={errors.email}
-                  className="pl-10"
-                />
+    <div className="min-h-screen bg-linear-to-br from-gray-900 via-rymel-blue to-[#0a0638]">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+          {/* Left side - Admin branding and features */}
+          <div className="text-white space-y-8 lg:pr-12">
+            <div className="space-y-4">
+              <img
+                className="h-12 w-auto"
+                src="https://rymel.com.co/wp-content/uploads/2024/07/Logo-Rymel-Oscuro.png"
+              />
+              <div className="inline-flex items-center gap-2 bg-rymel-yellow px-4 py-2 rounded-full">
+                <IconShieldCheckFilled className="h-5 w-5 text-rymel-blue" />
+                <span className="text-sm font-bold text-rymel-blue">
+                  ADMINISTRADOR
+                </span>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-700"
-              >
-                Contraseña
-              </label>
-              <div className="relative">
-                <IconLock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  error={errors.password}
-                  className="pl-10"
-                />
+            <div className="space-y-4">
+              <h1 className="text-5xl font-bold leading-tight text-balance">
+                Panel de Control Administrativo
+              </h1>
+              <p className="text-xl text-white/80 leading-relaxed">
+                Acceso exclusivo para gestión y supervisión de la plataforma
+                Rymel
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="w-12 h-12 bg-rymel-yellow rounded-lg flex items-center justify-center mb-3">
+                  <IconLock className="h-6 w-6 text-rymel-blue" />
+                </div>
+                <h3 className="font-semibold mb-1">Seguridad Avanzada</h3>
+                <p className="text-sm text-white/70">
+                  Autenticación multifactor
+                </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-3">
+                  <IconChartBar className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold mb-1">Análisis en Vivo</h3>
+                <p className="text-sm text-white/70">
+                  Dashboard en tiempo real
+                </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-3">
+                  <IconSettings className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold mb-1">Configuración Total</h3>
+                <p className="text-sm text-white/70">
+                  Control completo del sistema
+                </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-3">
+                  <span className="text-2xl">👥</span>
+                </div>
+                <h3 className="font-semibold mb-1">Gestión de Usuarios</h3>
+                <p className="text-sm text-white/70">Administra permisos</p>
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              isLoading={loginMutation.isPending}
-            >
-              Iniciar Sesión
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <div className="pt-4">
+              <div className="bg-orange-500/20 border border-orange-500/30 rounded-lg p-4">
+                <p className="text-sm text-orange-200">
+                  <strong>Aviso:</strong> Esta área es exclusiva para personal
+                  autorizado. Todos los accesos son registrados y monitoreados.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side - Login form with distinct styling */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 lg:p-12">
+            <LoginForm />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center text-sm text-white/70">
+        <span>© 2025 Rymel - Panel Administrativo</span>
+      </div>
     </div>
   );
 };

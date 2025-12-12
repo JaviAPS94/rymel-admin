@@ -3,7 +3,7 @@ import type {
   LoginCredentials,
   AuthResponse,
   BackendLoginResponse,
-} from "../types/auth.types";
+} from "@/types/auth.types";
 
 /**
  * Decodifica un JWT para extraer el payload
