@@ -11,3 +11,127 @@
   --color-muted-foreground: #60607a;
   --color-input: #e5e7eb;
 }
+
+/* ===== BOM Tree ===== */
+.bom-tree-container {
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+}
+
+.bom-tree {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 100%;
+  padding: 24px;
+}
+
+/* Each level's children row */
+.bom-tree ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  position: relative;
+}
+
+/* Vertical connector from the parent node down to the children's horizontal bar */
+.bom-tree ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 20px;
+  background-color: #9ca3af;
+}
+
+/* Individual child item */
+.bom-tree ul > li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 0 10px;
+}
+
+/* Horizontal connector — left half */
+.bom-tree ul > li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 50%;
+  width: 50%;
+  height: 2px;
+  background-color: #9ca3af;
+}
+
+/* Horizontal connector — right half */
+.bom-tree ul > li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 2px;
+  background-color: #9ca3af;
+}
+
+/* First child: no left half */
+.bom-tree ul > li:first-child::before { display: none; }
+/* Last child: no right half */
+.bom-tree ul > li:last-child::after { display: none; }
+/* Only child: no horizontal bar at all */
+.bom-tree ul > li:only-child::before,
+.bom-tree ul > li:only-child::after { display: none; }
+
+/* Wrapper inside each li that adds the vertical drop + holds the node */
+.bom-node-drop {
+  padding-top: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Vertical drop line from horizontal bar down to the node */
+.bom-node-drop::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 20px;
+  background-color: #9ca3af;
+}
+
+/* Only-child still needs the drop line (::before/::after are hidden on li but drop is still needed) */
+.bom-tree ul > li:only-child > .bom-node-drop::before {
+  display: block;
+}
+
+/* Root level: no connectors from above */
+.bom-root-level {
+  padding-top: 0;
+}
+
+.bom-root-level::before {
+  display: none !important;
+}
+
+.bom-root-level > li::before,
+.bom-root-level > li::after {
+  display: none;
+}
+
+.bom-root-level > li > .bom-node-drop {
+  padding-top: 0;
+}
+
+.bom-root-level > li > .bom-node-drop::before {
+  display: none;
+}

@@ -5,6 +5,7 @@ import {
   IconUsers,
   IconFiles,
   IconSettings,
+  IconSitemap,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { useAuthStore } from "@store/authStore";
@@ -22,6 +23,7 @@ export const Navbar = () => {
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: IconHome },
     { path: "/users", label: "Usuarios", icon: IconUsers },
+    { path: "/bom", label: "Materiales", icon: IconSitemap },
     { path: "/resources", label: "Recursos", icon: IconFiles },
     { path: "/settings", label: "Configuración", icon: IconSettings },
   ];

@@ -3,6 +3,8 @@ import { Toaster } from "sonner";
 import { LoginPage } from "@pages/LoginPage";
 import { DashboardPage } from "@pages/DashboardPage";
 import { UsersPage } from "@pages/UsersPage";
+import { BomListPage } from "@pages/BomListPage";
+import { BomEditorPage } from "@pages/BomEditorPage";
 import { ProtectedRoute } from "@components/ProtectedRoute";
 import { useAuthStore } from "@store/authStore";
 
@@ -25,6 +27,18 @@ const App = () => {
         <Route path="/users">
           <ProtectedRoute>
             <UsersPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/bom">
+          <ProtectedRoute>
+            <BomListPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/bom/:id">
+          <ProtectedRoute>
+            <BomEditorPage />
           </ProtectedRoute>
         </Route>
 
