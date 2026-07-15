@@ -43,9 +43,19 @@ export const BomEditorPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditBomModal, setShowEditBomModal] = useState(false);
   const [addingChildOf, setAddingChildOf] = useState<BomNode | null>(null);
+  const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set());
 
   const handleNodeClick = (node: BomNode) => {
     setSelectedNode((prev) => (prev?.id === node.id ? null : node));
+  };
+
+  const handleToggleExpand = (nodeId: number) => {
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return next;
+    });
   };
 
   const handleAddRoot = () => {
@@ -54,6 +64,9 @@ export const BomEditorPage = () => {
   };
 
   const handleAddChild = () => {
+    if (selectedNode) {
+      setExpandedNodes((prev) => new Set([...prev, selectedNode.id]));
+    }
     setAddingChildOf(selectedNode);
     setShowAddNodeModal(true);
   };
@@ -163,6 +176,8 @@ export const BomEditorPage = () => {
                 onNodeClick={handleNodeClick}
                 selectedNodeId={selectedNode?.id ?? null}
                 onAddRoot={handleAddRoot}
+                expandedNodes={expandedNodes}
+                onToggleExpand={handleToggleExpand}
               />
             </div>
           </div>
