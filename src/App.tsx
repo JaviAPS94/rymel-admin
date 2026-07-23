@@ -5,8 +5,10 @@ import { DashboardPage } from "@pages/DashboardPage";
 import { UsersPage } from "@pages/UsersPage";
 import { BomListPage } from "@pages/BomListPage";
 import { BomEditorPage } from "@pages/BomEditorPage";
+import { DesignCodeRulesPage } from "@pages/DesignCodeRulesPage";
 import { ProtectedRoute } from "@components/ProtectedRoute";
 import { useAuthStore } from "@store/authStore";
+import { Role } from "@/types/user.types";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -39,6 +41,12 @@ const App = () => {
         <Route path="/bom/:id">
           <ProtectedRoute>
             <BomEditorPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/design-code-rules">
+          <ProtectedRoute roles={[Role.ADMIN]}>
+            <DesignCodeRulesPage />
           </ProtectedRoute>
         </Route>
 

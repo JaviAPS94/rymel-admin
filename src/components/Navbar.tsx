@@ -6,10 +6,12 @@ import {
   IconFiles,
   IconSettings,
   IconSitemap,
+  IconBarcode,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { useAuthStore } from "@store/authStore";
 import { useLogout } from "@hooks/useAuth";
+import { Role } from "@/types/user.types";
 
 export const Navbar = () => {
   const user = useAuthStore((state) => state.user);
@@ -20,11 +22,22 @@ export const Navbar = () => {
     logoutMutation.mutate();
   };
 
+  const isAdmin = user?.roles?.includes(Role.ADMIN);
+
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: IconHome },
     { path: "/users", label: "Usuarios", icon: IconUsers },
     { path: "/bom", label: "Materiales", icon: IconSitemap },
     { path: "/resources", label: "Recursos", icon: IconFiles },
+    ...(isAdmin
+      ? [
+          {
+            path: "/design-code-rules",
+            label: "Reglas de Código",
+            icon: IconBarcode,
+          },
+        ]
+      : []),
     { path: "/settings", label: "Configuración", icon: IconSettings },
   ];
 
