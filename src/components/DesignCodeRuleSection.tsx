@@ -45,6 +45,8 @@ interface DesignCodeRuleSectionProps {
   fields: RuleFieldConfig[];
   columns: RuleColumn[];
   hooks: RuleHooks;
+  /** Validación cruzada entre campos del formulario (ej. mínimo <= máximo). */
+  validate?: (values: Record<string, any>) => string | null;
   /** Solo para el catálogo de formatos de sufijo: acción de "marcar como predeterminado". */
   markAsDefault?: {
     isDefault: (row: Record<string, any>) => boolean;
@@ -59,6 +61,7 @@ export const DesignCodeRuleSection = ({
   fields,
   columns,
   hooks,
+  validate,
   markAsDefault,
 }: DesignCodeRuleSectionProps) => {
   const { data: rows, isLoading, error } = hooks.useList();
@@ -159,6 +162,7 @@ export const DesignCodeRuleSection = ({
           isLoading={createMutation.isPending || updateMutation.isPending}
           onSubmit={handleSubmit}
           onClose={() => setShowFormModal(false)}
+          validate={validate}
         />
       )}
 

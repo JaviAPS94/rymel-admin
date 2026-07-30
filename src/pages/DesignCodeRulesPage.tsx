@@ -43,11 +43,21 @@ const SUFFIX_PATTERN_LABELS: Record<string, string> = Object.fromEntries(
   SUFFIX_PATTERN_OPTIONS.map((option) => [option.value, option.label])
 );
 
+const validateMinMax =
+  (minKey: string, maxKey: string) => (values: Record<string, any>) => {
+    const min = Number(values[minKey]);
+    const max = Number(values[maxKey]);
+    if (!Number.isNaN(min) && !Number.isNaN(max) && min > max) {
+      return "El valor mínimo no puede ser mayor que el máximo";
+    }
+    return null;
+  };
+
 const TABS = [
   { id: "power", label: "Potencia" },
   { id: "primaryTension", label: "Tensión Primaria" },
   { id: "secondaryTension", label: "Tensión Secundaria" },
-  { id: "sapSegmentMapping", label: "Mapeo SAP" },
+  { id: "sapSegmentMapping", label: "Mapeo ERP" },
   { id: "suffixFormats", label: "Sufijos" },
 ] as const;
 
@@ -88,7 +98,7 @@ export const DesignCodeRulesPage = () => {
         {activeTab === "power" && (
           <DesignCodeRuleSection
             title="Potencia → Letra"
-            description="Letra correspondiente a cada potencia (kVA) según la fase"
+            description="Letra correspondiente a cada rango de potencia (kVA) según la fase"
             newButtonLabel="Nueva regla de potencia"
             fields={[
               {
@@ -97,7 +107,16 @@ export const DesignCodeRulesPage = () => {
                 type: "select",
                 options: PHASE_TYPE_OPTIONS,
               },
-              { key: "powerKva", label: "Potencia (kVA)", type: "number" },
+              {
+                key: "powerKvaMin",
+                label: "Potencia mínima (kVA)",
+                type: "number",
+              },
+              {
+                key: "powerKvaMax",
+                label: "Potencia máxima (kVA)",
+                type: "number",
+              },
               { key: "letter", label: "Letra", type: "text" },
             ]}
             columns={[
@@ -106,51 +125,75 @@ export const DesignCodeRulesPage = () => {
                 label: "Fase",
                 render: (row) => PHASE_TYPE_LABELS[row.phaseType] || row.phaseType,
               },
-              { key: "powerKva", label: "Potencia (kVA)" },
+              { key: "powerKvaMin", label: "Potencia mínima (kVA)" },
+              { key: "powerKvaMax", label: "Potencia máxima (kVA)" },
               { key: "letter", label: "Letra" },
             ]}
             hooks={usePowerLetters}
+            validate={validateMinMax("powerKvaMin", "powerKvaMax")}
           />
         )}
 
         {activeTab === "primaryTension" && (
           <DesignCodeRuleSection
             title="Tensión Primaria → Letra"
-            description="Letra correspondiente a cada valor de tensión primaria"
+            description="Letra correspondiente a cada rango de tensión primaria"
             newButtonLabel="Nueva regla de tensión primaria"
             fields={[
-              { key: "tensionValue", label: "Tensión (V)", type: "number" },
+              {
+                key: "tensionValueMin",
+                label: "Tensión mínima (V)",
+                type: "number",
+              },
+              {
+                key: "tensionValueMax",
+                label: "Tensión máxima (V)",
+                type: "number",
+              },
               { key: "letter", label: "Letra", type: "text" },
             ]}
             columns={[
-              { key: "tensionValue", label: "Tensión (V)" },
+              { key: "tensionValueMin", label: "Tensión mínima (V)" },
+              { key: "tensionValueMax", label: "Tensión máxima (V)" },
               { key: "letter", label: "Letra" },
             ]}
             hooks={usePrimaryTensionLetters}
+            validate={validateMinMax("tensionValueMin", "tensionValueMax")}
           />
         )}
 
         {activeTab === "secondaryTension" && (
           <DesignCodeRuleSection
             title="Tensión Secundaria → Letra"
-            description="Letra correspondiente a cada valor de tensión secundaria"
+            description="Letra correspondiente a cada rango de tensión secundaria"
             newButtonLabel="Nueva regla de tensión secundaria"
             fields={[
-              { key: "tensionValue", label: "Tensión (V)", type: "number" },
+              {
+                key: "tensionValueMin",
+                label: "Tensión mínima (V)",
+                type: "number",
+              },
+              {
+                key: "tensionValueMax",
+                label: "Tensión máxima (V)",
+                type: "number",
+              },
               { key: "letter", label: "Letra", type: "text" },
             ]}
             columns={[
-              { key: "tensionValue", label: "Tensión (V)" },
+              { key: "tensionValueMin", label: "Tensión mínima (V)" },
+              { key: "tensionValueMax", label: "Tensión máxima (V)" },
               { key: "letter", label: "Letra" },
             ]}
             hooks={useSecondaryTensionLetters}
+            validate={validateMinMax("tensionValueMin", "tensionValueMax")}
           />
         )}
 
         {activeTab === "sapSegmentMapping" && (
           <DesignCodeRuleSection
-            title="Mapeo de Segmentos SAP"
-            description="Posición (0-based) de cada segmento dentro de la referencia SAP, separada por guiones"
+            title="Mapeo de Segmentos ERP"
+            description="Posición (0-based) de cada segmento dentro de la referencia ERP, separada por guiones"
             newButtonLabel="Nueva regla de mapeo"
             fields={[
               {

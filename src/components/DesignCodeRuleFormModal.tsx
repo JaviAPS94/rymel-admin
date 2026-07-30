@@ -18,6 +18,10 @@ interface DesignCodeRuleFormModalProps {
   isLoading: boolean;
   onSubmit: (values: Record<string, string | number | boolean>) => void;
   onClose: () => void;
+  /** Validación cruzada entre campos (ej. mínimo <= máximo); devuelve un mensaje de error o null si es válido. */
+  validate?: (
+    values: Record<string, string | number | boolean>
+  ) => string | null;
 }
 
 export const DesignCodeRuleFormModal = ({
@@ -27,6 +31,7 @@ export const DesignCodeRuleFormModal = ({
   isLoading,
   onSubmit,
   onClose,
+  validate,
 }: DesignCodeRuleFormModalProps) => {
   const [values, setValues] = useState<Record<string, string | number | boolean>>(
     () => {
@@ -42,9 +47,11 @@ export const DesignCodeRuleFormModal = ({
     }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setFormError(null);
 
     const newErrors: Record<string, string> = {};
     fields.forEach((field) => {
@@ -65,6 +72,12 @@ export const DesignCodeRuleFormModal = ({
       payload[field.key] =
         field.type === "number" ? Number(values[field.key]) : values[field.key];
     });
+
+    const validationError = validate?.(payload) ?? null;
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
 
     onSubmit(payload);
   };
@@ -115,6 +128,12 @@ export const DesignCodeRuleFormModal = ({
             )}
           </div>
         ))}
+
+        {formError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+            {formError}
+          </div>
+        )}
 
         <div className="flex gap-3 pt-4">
           <Button

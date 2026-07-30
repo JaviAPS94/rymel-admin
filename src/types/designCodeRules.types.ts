@@ -28,12 +28,14 @@ export type DesignCodeSuffixPattern =
 export interface DesignCodePowerLetter {
   id: number;
   phaseType: DesignCodePhaseType;
-  powerKva: number;
+  powerKvaMin: number;
+  powerKvaMax: number;
   letter: string;
 }
 export interface CreateDesignCodePowerLetterDto {
   phaseType: DesignCodePhaseType;
-  powerKva: number;
+  powerKvaMin: number;
+  powerKvaMax: number;
   letter: string;
 }
 export type UpdateDesignCodePowerLetterDto =
@@ -41,11 +43,13 @@ export type UpdateDesignCodePowerLetterDto =
 
 export interface DesignCodeTensionLetter {
   id: number;
-  tensionValue: number;
+  tensionValueMin: number;
+  tensionValueMax: number;
   letter: string;
 }
 export interface CreateDesignCodeTensionLetterDto {
-  tensionValue: number;
+  tensionValueMin: number;
+  tensionValueMax: number;
   letter: string;
 }
 export type UpdateDesignCodeTensionLetterDto =
