@@ -6,6 +6,8 @@ import { UsersPage } from "@pages/UsersPage";
 import { BomListPage } from "@pages/BomListPage";
 import { BomEditorPage } from "@pages/BomEditorPage";
 import { DesignCodeRulesPage } from "@pages/DesignCodeRulesPage";
+import { PhantomItemListPage } from "@pages/PhantomItemListPage";
+import { PhantomItemEditorPage } from "@pages/PhantomItemEditorPage";
 import { ProtectedRoute } from "@components/ProtectedRoute";
 import { useAuthStore } from "@store/authStore";
 import { Role } from "@/types/user.types";
@@ -47,6 +49,18 @@ const App = () => {
         <Route path="/design-code-rules">
           <ProtectedRoute roles={[Role.ADMIN]}>
             <DesignCodeRulesPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/phantom-items">
+          <ProtectedRoute roles={[Role.ADMIN, Role.DESIGN, Role.NORM]}>
+            <PhantomItemListPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/phantom-items/:id">
+          <ProtectedRoute roles={[Role.ADMIN, Role.DESIGN, Role.NORM]}>
+            <PhantomItemEditorPage />
           </ProtectedRoute>
         </Route>
 
