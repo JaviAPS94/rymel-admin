@@ -108,6 +108,30 @@ npm run preview      # Preview del build
 npm run lint         # Linting
 ```
 
+## Motor de fórmulas
+
+La grilla de ítems fantasma no evalúa fórmulas por su cuenta: usa
+`@rymel/formula-engine`, fijado a un **tag inmutable** en `package.json`.
+
+```json
+"@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.5.0"
+```
+
+El mismo paquete lo usan `project-back` (para recalcular diseños en el
+servidor) y `project-front` (el diseñador tipo Excel). Vive fuera de estos
+repositorios porque el mismo cálculo tiene que dar el mismo número en los
+tres: un diseño recalculado en el servidor debe coincidir con lo que el
+usuario vio en pantalla.
+
+**No copies código del motor a este repositorio.** Si falta una función, se
+añade al paquete y se publica un tag nuevo.
+
+## Variables de entorno
+
+| Variable | Descripción |
+|---|---|
+| `VITE_API_URL` | URL de `project-back`. Por omisión `http://localhost:3000`. |
+
 ## Notas Adicionales
 
 - Priorizar accesibilidad (a11y)

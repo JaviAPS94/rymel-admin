@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildGraph, updateCellInGraph } from "@/lib/formula";
+import { buildGraph, updateCellInGraph } from "@rymel/formula-engine";
 import {
   buildEmptyCells,
   buildValueMap,

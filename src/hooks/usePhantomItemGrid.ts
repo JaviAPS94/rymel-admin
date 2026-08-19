@@ -8,7 +8,7 @@ import {
   type DepGraph,
   type CellValueMap,
   type FormulaValue,
-} from "@/lib/formula";
+} from "@rymel/formula-engine";
 import { COLUMNS, getColumnByLetter } from "@components/phantom-item/columns";
 import type { PhantomItemDetail } from "@/types/phantom-item.types";
 

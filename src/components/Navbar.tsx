@@ -10,6 +10,7 @@ import {
   IconGhost2,
   IconBoxSeam,
   IconUserCog,
+  IconMathFunction,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { NavDropdown } from "@components/NavDropdown";
@@ -37,7 +38,10 @@ export const Navbar = () => {
   const adminItems = [
     { path: "/users", label: "Usuarios", icon: IconUsers },
     ...(isAdmin
-      ? [{ path: "/design-code-rules", label: "Reglas de Código", icon: IconBarcode }]
+      ? [
+          { path: "/design-code-rules", label: "Reglas de Código", icon: IconBarcode },
+          { path: "/formulas", label: "Fórmulas", icon: IconMathFunction },
+        ]
       : []),
     { path: "/settings", label: "Configuración", icon: IconSettings },
   ];
