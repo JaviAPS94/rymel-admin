@@ -1,5 +1,7 @@
 import { apiClient } from "./api";
 import type {
+  CalculateFunctionsDto,
+  CalculateFunctionsResult,
   CreateDesignFunctionDto,
   DesignFunctionDetail,
   DesignFunctionImpact,
@@ -143,6 +145,23 @@ export const designFunctionService = {
    * cifrado, así que el tiempo de espera por defecto del cliente se queda
    * corto.
    */
+  /**
+   * Evalúa un lote de invocaciones de fórmulas de diseño.
+   *
+   * Va contra `design-functions/calculate`, la misma ruta que usa el
+   * diseñador: la expresión nunca sale del servidor, solo viajan el
+   * identificador y los parámetros.
+   */
+  async calculate(
+    data: CalculateFunctionsDto,
+  ): Promise<CalculateFunctionsResult> {
+    const response = await apiClient.post<CalculateFunctionsResult>(
+      "/design-functions/calculate",
+      data,
+    );
+    return response.data;
+  },
+
   async recalculate(subDesignIds: number[]): Promise<RecalculationReport> {
     const response = await apiClient.post<RecalculationReport>(
       `${BASE}/recalculate`,

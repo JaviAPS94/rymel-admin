@@ -10,6 +10,7 @@ import {
   IconGhost2,
   IconBoxSeam,
   IconUserCog,
+  IconFileSpreadsheet,
   IconMathFunction,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
@@ -41,6 +42,11 @@ export const Navbar = () => {
       ? [
           { path: "/design-code-rules", label: "Reglas de Código", icon: IconBarcode },
           { path: "/formulas", label: "Fórmulas", icon: IconMathFunction },
+          {
+            path: "/templates",
+            label: "Plantillas",
+            icon: IconFileSpreadsheet,
+          },
         ]
       : []),
     { path: "/settings", label: "Configuración", icon: IconSettings },

@@ -182,3 +182,18 @@ export const entriesToConstants = (
   }
   return constants;
 };
+
+/**
+ * Evaluación por lotes de fórmulas de diseño.
+ *
+ * El endpoint siempre aceptó un arreglo; es lo que permite que una hoja con
+ * cuarenta invocaciones independientes haga una sola petición en vez de
+ * cuarenta.
+ */
+export interface CalculateFunctionsDto {
+  functions: { designFunctionId: number; parameters: Record<string, number> }[];
+}
+
+export interface CalculateFunctionsResult {
+  results: { designFunctionId: number; result: number }[];
+}

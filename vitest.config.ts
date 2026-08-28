@@ -14,6 +14,13 @@ export default defineConfig({
     },
   },
   test: {
+    // `node` por omisión: casi todo lo que se prueba son funciones puras. Los
+    // ficheros que montan un hook piden `jsdom` con una anotación propia.
     environment: "node",
+    include: ["src/**/*.spec.{ts,tsx}"],
+    // Necesario para que Testing Library limpie el DOM entre pruebas: sin
+    // esto, lo que monta una prueba sigue ahí en la siguiente y los selectores
+    // encuentran dos de todo.
+    globals: true,
   },
 });

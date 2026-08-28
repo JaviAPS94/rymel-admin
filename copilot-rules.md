@@ -114,7 +114,7 @@ La grilla de ítems fantasma no evalúa fórmulas por su cuenta: usa
 `@rymel/formula-engine`, fijado a un **tag inmutable** en `package.json`.
 
 ```json
-"@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.5.0"
+"@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.6.0"
 ```
 
 El mismo paquete lo usan `project-back` (para recalcular diseños en el
@@ -125,6 +125,68 @@ usuario vio en pantalla.
 
 **No copies código del motor a este repositorio.** Si falta una función, se
 añade al paquete y se publica un tag nuevo.
+
+## Plantillas de diseño
+
+Las plantillas —la base sobre la que los diseñadores calculan— **se
+administran aquí**. `project-front` las carga; este repositorio es donde se
+escriben, se validan y se publican.
+
+Su contrato vive en otro paquete, con la misma regla que el motor:
+
+```json
+"@rymel/design-template": "github:JaviAPS94/rymel-design-template#v1.1.0"
+```
+
+**No declares tipos de plantilla en este repositorio ni traduzcas la forma
+persistida a mano.** `src/types/template.types.ts` reexporta el modelo del
+paquete y solo añade la forma de las peticiones de la API.
+
+No es una preferencia de estilo. Mientras cada consumidor tenía su propia
+versión de la plantilla, uno escribía `templateHiddenRows` y otro leía
+`hiddenRows`: las filas que un autor ocultaba reaparecían en la pantalla del
+diseñador, y nadie lo notó durante meses porque los dos lados «funcionaban».
+
+Lo que el paquete decide, y aquí no se rehace:
+
+- los tipos del documento, la hoja y la celda;
+- la traducción entre lo guardado y el modelo canónico;
+- qué se descarta al normalizar y qué cuenta como contenido;
+- la validación completa, que es la misma que corre en el servidor.
+
+### Estados y publicación
+
+Una plantilla nace en `DRAFT` y solo se ve en la biblioteca del diseñador
+cuando se publica. Editar una publicada trabaja sobre su borrador: lo que los
+diseñadores cargan no cambia hasta publicar de nuevo.
+
+El corte de la biblioteca es reversible desde `project-back` con
+`TEMPLATE_LIBRARY_PUBLISHED_ONLY=false`.
+
+## Deuda conocida
+
+### Dos rejillas de hoja de cálculo
+
+Existen dos: la de `project-front` (`SpreadSheet.tsx`, ~6300 líneas) y la de
+este repositorio (`components/template/grid/`). Es deliberado — la del
+diseñador está entrelazada con su elemento, su panel de código y su BOM, y no
+se puede tomar sin llevarse todo lo demás.
+
+Se acota con una regla: **ninguna lógica de cálculo, serialización o
+validación vive en la capa de interfaz.** Toda está en los dos paquetes.
+Mientras eso se cumpla, lo que se duplica son estilos, no números.
+
+Extraer una rejilla compartida (`@rymel/spreadsheet-ui`) se plantea **cuando
+el editor y el diseñador empiecen a pedir las mismas funciones** — cuando una
+misma necesidad haya que implementarla dos veces más de una vez. Hasta
+entonces, el coste del paquete compartido supera al de las dos rejillas.
+
+### Campos espejo del contrato
+
+El contrato escribe cuatro campos por duplicado mientras `project-front` no lo
+consuma del todo. Están declarados en `DEPRECATED_FIELDS`, con quién los lee, y
+una prueba impide que la declaración y el serializador diverjan. Retirarlos es
+versión mayor del contrato.
 
 ## Variables de entorno
 

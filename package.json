@@ -11,7 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.5.0",
+    "@rymel/design-template": "github:JaviAPS94/rymel-design-template#v2.0.0",
+    "@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.8.0",
     "@tabler/icons-react": "^3.35.0",
     "@tailwindcss/vite": "^4.1.17",
     "@tanstack/react-query": "^5.90.11",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
@@ -35,6 +37,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "jsdom": "^30.0.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",

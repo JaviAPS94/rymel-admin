@@ -1,0 +1,217 @@
+{
+ "name": "Resumen",
+ "position": 0,
+ "cells": {
+  "A1": {
+   "content": "",
+   "format": {
+    "bold": true
+   }
+  },
+  "C2": {
+   "content": "Eficiencia DOE (%)",
+   "format": {
+    "bold": true,
+    "border": "1px solid #000"
+   }
+  },
+  "H2": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "C3": {
+   "content": "Test 3",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "D3": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "E3": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "F3": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "G3": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "H3": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "C5": {
+   "content": "Perdidas en vacio (W)",
+   "format": {
+    "bold": true,
+    "border": "1px solid #000"
+   }
+  },
+  "H5": {
+   "content": "",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "C6": {
+   "content": "=AE42*(VLOOKUP(I39*10; Tablas!B45:Tablas!C156; 2; TRUE))",
+   "format": {
+    "border": "1px solid #000"
+   }
+  },
+  "C9": {
+   "content": "Plantilla para transformadores Convencionales Monofásicos",
+   "format": {
+    "bold": true,
+    "textColor": "#2d6ef0"
+   }
+  },
+  "C11": {
+   "content": "Datos de entrada",
+   "format": {
+    "bold": true,
+    "textColor": "#7c2782"
+   }
+  },
+  "D11": {
+   "content": "",
+   "format": {
+    "bold": true,
+    "textColor": "#7c2782"
+   }
+  },
+  "E11": {
+   "content": "",
+   "format": {
+    "bold": true,
+    "textColor": "#7c2782"
+   }
+  },
+  "F11": {
+   "content": "",
+   "format": {
+    "textColor": "#7c2782"
+   }
+  }
+ },
+ "styles": {
+  "columnWidths": {
+   "0": 15,
+   "1": 112.5,
+   "2": 127.5,
+   "3": 91.25,
+   "4": 77.5,
+   "5": 178.75,
+   "6": 62,
+   "7": 102.5,
+   "8": 85,
+   "9": 163.75,
+   "10": 475.75,
+   "11": 60,
+   "12": 63.75,
+   "13": 40,
+   "14": 40,
+   "15": 40,
+   "16": 65,
+   "17": 40,
+   "18": 40,
+   "19": 40,
+   "20": 40,
+   "21": 40,
+   "22": 40,
+   "23": 40,
+   "24": 40,
+   "25": 40,
+   "26": 40,
+   "27": 40,
+   "28": 40,
+   "29": 40,
+   "30": 40,
+   "31": 40,
+   "32": 40
+  },
+  "rowHeights": {
+   "0": 24,
+   "1": 24,
+   "2": 24,
+   "3": 24,
+   "4": 24,
+   "5": 24,
+   "72": 367
+  },
+  "hiddenRows": [],
+  "hiddenColumns": [],
+  "freezeRow": 7,
+  "freezeColumn": 0,
+  "mergedCells": [
+   {
+    "startCell": "C2",
+    "endCell": "G2",
+    "rowSpan": 1,
+    "colSpan": 5
+   },
+   {
+    "startCell": "H2",
+    "endCell": "I2",
+    "rowSpan": 1,
+    "colSpan": 2
+   },
+   {
+    "startCell": "C3",
+    "endCell": "I3",
+    "rowSpan": 1,
+    "colSpan": 7
+   },
+   {
+    "startCell": "C5",
+    "endCell": "G5",
+    "rowSpan": 1,
+    "colSpan": 5
+   },
+   {
+    "startCell": "H5",
+    "endCell": "I5",
+    "rowSpan": 1,
+    "colSpan": 2
+   },
+   {
+    "startCell": "C6",
+    "endCell": "I6",
+    "rowSpan": 1,
+    "colSpan": 7
+   },
+   {
+    "startCell": "C9",
+    "endCell": "O9",
+    "rowSpan": 1,
+    "colSpan": 13
+   },
+   {
+    "startCell": "C11",
+    "endCell": "F11",
+    "rowSpan": 1,
+    "colSpan": 4
+   }
+  ],
+  "namedRanges": [],
+  "semiFinishedZones": [],
+  "itemCatalogTables": []
+ }
+}
