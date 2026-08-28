@@ -35,7 +35,10 @@ const detail: TemplateDetail = {
       {
         name: "Hoja1",
         order: 0,
-        cells: { A1: { kind: "literal", content: "10" } },
+        cells: {
+          A1: { kind: "formula", content: "=SUMA(B1:B5)" },
+          B1: { kind: "literal", content: "1" },
+        },
         styles: emptySheetStyles(),
       },
     ],
@@ -103,6 +106,12 @@ const cell = (ref: string): HTMLElement =>
 const cellInput = (ref: string): HTMLInputElement =>
   document.querySelector(`[data-cell="${ref}"] input`) as HTMLInputElement;
 
+/** Las celdas que la rejilla pinta como seleccionadas. */
+const selectedRefs = (): string[] =>
+  [...document.querySelectorAll("[data-cell][data-selected='true']")]
+    .map((node) => node.getAttribute("data-cell") as string)
+    .sort();
+
 const formulaBar = (): HTMLInputElement =>
   document.querySelector('[data-testid="formula-input"]') as HTMLInputElement;
 
@@ -138,5 +147,53 @@ describe("el modo fórmula al teclear", () => {
     fireEvent.change(cellInput("A1"), { target: { value: "=SUMA(A1:A5)" } });
 
     expect(formulaBar().value).toBe("=SUMA(A1:A5)");
+  });
+
+});
+
+describe("editar el contenido de una celda", () => {
+  it("editar una celda con fórmula y cambiar de celda no la borra", () => {
+    // El borrador vive en el constructor de fórmulas, y la selección también
+    // lo reescribe al cambiar de celda. Si esa reescritura llega antes que la
+    // confirmación, lo que se guarda en la celda editada es el contenido de la
+    // celda nueva — es decir, se pierde la fórmula.
+    render(<TemplateEditorPage />);
+
+    fireEvent.doubleClick(cell("A1"));
+    expect(cellInput("A1").value).toBe("=SUMA(B1:B5)");
+
+    // Se cambia de celda: primero se mueve la selección, después suelta el foco.
+    fireEvent.mouseDown(cell("C3"));
+    fireEvent.blur(cellInput("A1"));
+
+    fireEvent.mouseDown(cell("A1"));
+    expect(formulaBar().value).toBe("=SUMA(B1:B5)");
+  });
+
+});
+
+describe("la selección en la rejilla", () => {
+  it("la barra al aparecer no arrastra la selección hacia arriba", () => {
+    // Seleccionar una celda con fórmula hace aparecer la barra del modo
+    // fórmula, la rejilla baja y las celdas desfilan por debajo de un puntero
+    // que sigue pulsado pero no se ha movido. Eso no es un arrastre.
+    render(<TemplateEditorPage />);
+
+    fireEvent.mouseDown(cell("A5"));
+    fireEvent.mouseEnter(cell("A4"));
+    fireEvent.mouseEnter(cell("A3"));
+    fireEvent.mouseEnter(cell("A2"));
+
+    expect(selectedRefs()).toEqual(["A5"]);
+  });
+
+  it("arrastrar con el puntero sí extiende la selección", () => {
+    render(<TemplateEditorPage />);
+
+    fireEvent.mouseDown(cell("A5"));
+    fireEvent.mouseMove(cell("A5"));
+    fireEvent.mouseEnter(cell("A4"));
+
+    expect(selectedRefs()).toEqual(["A4", "A5"]);
   });
 });

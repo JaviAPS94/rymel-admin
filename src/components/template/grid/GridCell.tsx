@@ -140,6 +140,7 @@ const GridCellComponent = ({
       // celda, y para localizarla al depurar.
       data-cell={cellRef}
       data-frozen={frozen}
+      data-selected={isSelected}
       style={{
         ...style,
         backgroundColor: background,

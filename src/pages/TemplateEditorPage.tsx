@@ -270,13 +270,24 @@ const Editor = ({ detailId }: { detailId: number }) => {
   /**
    * Al cambiar de celda, la barra pasa a mostrar su contenido.
    *
-   * Mientras se está señalando celdas para una fórmula **no**: ahí la
-   * selección se mueve a propósito y lo que se escribe pertenece a la celda de
-   * origen.
+   * Dos casos en los que **no**, y los dos por el mismo motivo: el borrador
+   * pertenece a otra celda y reescribirlo la vacía.
+   *
+   * - Mientras se señalan celdas para una fórmula, la selección se mueve a
+   *   propósito y lo que se escribe es de la celda de origen.
+   * - Mientras se está editando una celda, el borrador es el suyo. Cambiar de
+   *   celda mueve la selección antes de que el input suelte el foco, así que
+   *   sin esta guarda lo que se confirmaba en la celda editada era el
+   *   contenido de la celda nueva: abrir una fórmula y pinchar en otro sitio
+   *   la borraba.
    */
   const formulaKey = `${sheet?.name ?? ""}!${selection.activeRef}`;
   const [lastFormulaKey, setLastFormulaKey] = useState(formulaKey);
-  if (formulaKey !== lastFormulaKey && !formula.consumesClick) {
+  if (
+    formulaKey !== lastFormulaKey &&
+    !formula.consumesClick &&
+    editing === null
+  ) {
     setLastFormulaKey(formulaKey);
     formula.start(activeCell?.content ?? "", sheet?.name ?? "");
   }

@@ -78,6 +78,17 @@ export const TemplateGrid = ({
   const [viewport, setViewport] = useState({ top: 0, left: 0, height: 600, width: 900 });
   const [dragging, setDragging] = useState(false);
 
+  /**
+   * Si el puntero se ha movido de verdad desde que se pulsó.
+   *
+   * Arrastrar no es lo único que hace entrar el puntero en otra celda: al
+   * seleccionar una celda con fórmula aparece la barra del modo fórmula, la
+   * rejilla baja y las celdas pasan por debajo de un puntero que no se ha
+   * movido. Sin esta distinción eso se leía como un arrastre y marcaba las
+   * dos o tres celdas que habían desfilado por encima.
+   */
+  const pointerMoved = useRef(false);
+
   const columnWidth = useCallback(
     (column: number) => sheet.styles.columnWidths[column] ?? DEFAULT_COLUMN_WIDTH,
     [sheet.styles.columnWidths],
@@ -352,6 +363,9 @@ export const TemplateGrid = ({
         style={{ top: HEADER_HEIGHT, left: HEADER_WIDTH, right: 0, bottom: 0 }}
         onMouseUp={() => setDragging(false)}
         onMouseLeave={() => setDragging(false)}
+        onMouseMove={() => {
+          pointerMoved.current = true;
+        }}
       >
         <div className="relative" style={{ width: totalWidth, height: totalHeight }}>
           {renderedRows.map((row) =>
@@ -413,9 +427,12 @@ export const TemplateGrid = ({
                     if (onPickCell?.(ref)) return;
                     selection.select(row, column, event.shiftKey);
                     setDragging(true);
+                    pointerMoved.current = false;
                   }}
                   onMouseEnter={() => {
-                    if (dragging) selection.select(row, column, true);
+                    if (dragging && pointerMoved.current) {
+                      selection.select(row, column, true);
+                    }
                   }}
                   onDoubleClick={() => onStartEditing(ref)}
                   onContextMenu={(event) => onContextMenu?.(ref, event)}

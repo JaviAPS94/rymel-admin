@@ -198,3 +198,10 @@
 - [x] 17.2 En el admin desaparece `editingValue`: lo que se teclea en la celda **es** `formula.draft`. Con un solo dueño no hay nada que sincronizar y no puede volver a desincronizarse
 - [x] 17.3 En el diseñador el input de la celda es no controlado a propósito —redibujar la rejilla en cada tecla es lo que esa decisión evita—, así que se mantiene y solo se avisa al reducer cuando **cambia** si el contenido es fórmula o no. Entre la transición y el `blur` nadie lee el borrador; al soltar el foco se sincroniza con el texto completo
 - [x] 17.4 `TemplateEditorPage.spec.tsx` (3) sobre la página montada, no sobre el hook: el fallo no estaba en el hook y una prueba del hook habría pasado con él puesto. Comprobado que las tres fallan si se corta el aviso al reducer. De 68 pruebas a 71
+
+## 18. Se perdía la fórmula al editarla y la selección se arrastraba sola
+
+- [x] 18.1 Abrir una celda con fórmula y pinchar en otra la dejaba vacía. Al cambiar de celda la selección se mueve **antes** de que el input suelte el foco, así que el bloque que resincroniza el borrador ya lo había reemplazado por el contenido de la celda nueva, y eso era lo que se confirmaba en la celda editada
+- [x] 18.2 El diseñador no lo sufre porque confirma `inputRef.current.value` —el propio input, no controlado—, que ningún cambio de selección puede pisar. En el admin el input es controlado, así que la guarda va en la resincronización: mientras se edita una celda, el borrador es suyo y no se reescribe
+- [x] 18.3 Seleccionar una celda con fórmula marcaba dos o tres celdas hacia arriba. No era un arrastre: al aparecer la barra del modo fórmula la rejilla baja y las celdas desfilan por debajo de un puntero pulsado que no se ha movido, y `onMouseEnter` lo leía como arrastre. Ahora se exige movimiento real del puntero desde la pulsación
+- [x] 18.4 Cuatro pruebas más sobre la página montada, comprobadas al revés —fallan si se quita cada arreglo—. `data-selected` en la celda para poder leer qué se pinta como seleccionado. De 71 pruebas a 74
