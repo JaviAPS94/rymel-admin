@@ -213,3 +213,12 @@
 - [x] 19.3 El catálogo se compara **por contenido y no por identidad**: el `= []` del parámetro construía un array nuevo en cada render, así que comparar identidades era un bucle infinito. El vacío pasa a ser una constante del módulo
 - [x] 19.4 Además no se pinta la plantilla hasta tener el catálogo, como hace el diseñador —que no monta la hoja sin él—. Corregirse sola ya estaba garantizado; enseñar el `#ERROR` mientras tanto no aportaba nada
 - [x] 19.5 Dos pruebas sobre el hook montado, comprobadas al revés. De 74 pruebas a 76
+
+## 20. Ayuda con las funciones disponibles en la expresión
+
+- [x] 20.1 «Funciones disponibles» junto a la expresión, plegable, agrupado y con inserción en el cursor. La inserción la hace `insertIntoFormula` del motor compartido: es la misma operación que en el editor de plantillas
+- [x] 20.2 **No es el listado de la hoja de cálculo**, que era lo pedido. La expresión no la evalúa `@rymel/formula-engine` sino el motor cifrado, que por dentro es `mathjs`: comprobado contra el motor vivo, `SUMA`, `SI`, `REDONDEAR` y `RAIZ` dan «Undefined function». Ofrecerlas habría sido ofrecer fórmulas que fallan
+- [x] 20.3 El motor **no valida los nombres al guardar** —cifrar solo comprueba que la sintaxis se pueda analizar—, así que `y = RAIZ(x)` se guardaba sin protestar y fallaba al calcular un diseño, lejos y sin relación aparente. De ahí que el listado valga la pena
+- [x] 20.4 Corregido de paso el aviso de símbolos sin declarar, que llevaba una lista incrustada equivocada en los dos sentidos: daba por buena `ln` —que mathjs no tiene— y marcaba como error `log10`, `atan`, `asin`, `acos`, `mod`, `sign` y una docena más, que sí funcionan. Ahora usa el mismo catálogo
+- [x] 20.5 `check-math-catalog.mjs` cifra y evalúa cada símbolo del catálogo contra el motor real, y comprueba además que las de la hoja de cálculo sigan sin existir. 40 símbolos verificados
+- [x] 20.6 `mathFunctions.spec.ts` (7) sobre lo que no necesita el motor levantado: que las dos listas no se contradigan y que no vuelva a colarse un nombre inexistente. De 76 pruebas a 83

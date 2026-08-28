@@ -1,11 +1,22 @@
-import { useMemo, useState } from "react";
-import { IconAlertTriangle, IconLock } from "@tabler/icons-react";
+import { useMemo, useRef, useState } from "react";
+import {
+  IconAlertTriangle,
+  IconChevronDown,
+  IconChevronRight,
+  IconLock,
+  IconMathFunction,
+} from "@tabler/icons-react";
+import { insertIntoFormula } from "@rymel/formula-engine";
 import { Button } from "@components/ui/Button";
 import { subTypeLabel } from "@services/designFunctionService";
 import { Modal } from "@components/ui/Modal";
 import { FormulaVariablesEditor } from "@components/formula/FormulaVariablesEditor";
 import { FormulaConstantsEditor } from "@components/formula/FormulaConstantsEditor";
 import { FormulaTester } from "@components/formula/FormulaTester";
+import {
+  KNOWN_MATH_SYMBOLS,
+  MATH_FUNCTION_GROUPS,
+} from "@components/formula/mathFunctions";
 import {
   useCreateDesignFunction,
   useDesignFunctionDetail,
@@ -149,13 +160,35 @@ const FormulaForm = ({
   const [expression, setExpression] = useState(initial.expression);
   const [variables, setVariables] = useState<string[]>(initial.variables);
   const [constants, setConstants] = useState<ConstantEntry[]>(
-    initial.constants
+    initial.constants,
   );
   const [selectedSubTypes, setSelectedSubTypes] = useState<number[]>(
-    initial.subTypeIds
+    initial.subTypeIds,
   );
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string[] | null>(null);
+  const [showFunctions, setShowFunctions] = useState(false);
+
+  const expressionRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * Inserta una función donde está el cursor.
+   *
+   * La inserción la hace `insertIntoFormula`, del motor compartido: es la
+   * misma operación que en el editor de plantillas y no hay motivo para
+   * escribirla otra vez, aunque aquí el texto sea de otro lenguaje.
+   */
+  const insertFunction = (text: string) => {
+    const input = expressionRef.current;
+    const at = input?.selectionStart ?? expression.length;
+    const { formula, cursor } = insertIntoFormula(expression, at, text);
+
+    setExpression(formula);
+    window.setTimeout(() => {
+      input?.focus();
+      input?.setSelectionRange(cursor, cursor);
+    }, 0);
+  };
 
   /** Orden con el que se publicó la versión vigente. */
   const originalVariables = initial.variables;
@@ -177,15 +210,15 @@ const FormulaForm = ({
       ...variables.map((item) => item.trim()),
       ...constants.map((item) => item.name.trim()),
     ]);
-    const builtins = new Set([
-      "sin", "cos", "tan", "log", "ln", "sqrt", "abs", "exp", "pow",
-      "pi", "e", "min", "max", "round", "floor", "ceil",
-    ]);
+    // El catálogo es el mismo que se ofrece al escribir, y está comprobado
+    // contra el motor. La lista que había aquí incluía `ln` —que mathjs no
+    // tiene— y le faltaban `log10`, `atan` y una docena más: avisaba de lo que
+    // funciona y callaba ante lo que no.
     return [
       ...new Set(
         symbols.filter(
-          (symbol) => !declared.has(symbol) && !builtins.has(symbol)
-        )
+          (symbol) => !declared.has(symbol) && !KNOWN_MATH_SYMBOLS.has(symbol),
+        ),
       ),
     ];
   }, [expression, variables, constants, canEditExpression]);
@@ -207,7 +240,7 @@ const FormulaForm = ({
         {
           onSuccess: () => onClose(),
           onError: (err) => setError(errorMessageOf(err)),
-        }
+        },
       );
       return;
     }
@@ -247,27 +280,26 @@ const FormulaForm = ({
                   setConfirming(
                     message
                       .replace(/^.*requiere confirmación:\s*/, "")
-                      .split("; ")
+                      .split("; "),
                   );
                 } else {
                   setError(message);
                 }
               },
-            }
+            },
           );
         },
-      }
+      },
     );
   };
 
-  const saving =
-    create.isPending || update.isPending || publish.isPending;
+  const saving = create.isPending || update.isPending || publish.isPending;
 
   const constantsValid = constants.every(
     (constant) =>
       constant.name.trim() === "" ||
       (/^[A-Z][A-Z0-9_]*$/.test(constant.name) &&
-        Number.isFinite(Number(constant.value)))
+        Number.isFinite(Number(constant.value))),
   );
 
   const canSave =
@@ -340,10 +372,29 @@ const FormulaForm = ({
             <label className="text-sm font-medium text-gray-700">
               Expresión
             </label>
-            <span className="inline-flex items-center gap-1 text-xs text-amber-700">
-              <IconLock className="h-3.5 w-3.5" />
-              Confidencial · cada consulta queda registrada
-            </span>
+            <div className="flex items-center gap-3">
+              {/* Sin poder editar la expresión no hay dónde insertar nada. */}
+              {canEditExpression && (
+                <button
+                  type="button"
+                  data-action="math-functions"
+                  onClick={() => setShowFunctions((open) => !open)}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-rymel-blue hover:underline"
+                >
+                  {showFunctions ? (
+                    <IconChevronDown className="h-3.5 w-3.5" />
+                  ) : (
+                    <IconChevronRight className="h-3.5 w-3.5" />
+                  )}
+                  <IconMathFunction className="h-3.5 w-3.5" />
+                  Funciones disponibles
+                </button>
+              )}
+              <span className="inline-flex items-center gap-1 text-xs text-amber-700">
+                <IconLock className="h-3.5 w-3.5" />
+                Confidencial · cada consulta queda registrada
+              </span>
+            </div>
           </div>
 
           {expressionUnavailable ? (
@@ -360,6 +411,7 @@ const FormulaForm = ({
           ) : (
             <>
               <textarea
+                ref={expressionRef}
                 value={expression}
                 onChange={(event) => setExpression(event.target.value)}
                 rows={2}
@@ -370,6 +422,8 @@ const FormulaForm = ({
               <p className="mt-1 text-xs text-gray-500">
                 Debe tener la forma <code className="font-mono">y = …</code>
               </p>
+
+              {showFunctions && <MathFunctionPanel onInsert={insertFunction} />}
               {undeclared.length > 0 && (
                 <p className="mt-1 text-sm text-red-600">
                   Símbolos sin declarar: {undeclared.join(", ")}. Agrégalos como
@@ -418,7 +472,7 @@ const FormulaForm = ({
                       setSelectedSubTypes(
                         selected
                           ? selectedSubTypes.filter((id) => id !== subType.id)
-                          : [...selectedSubTypes, subType.id]
+                          : [...selectedSubTypes, subType.id],
                       )
                     }
                     className={`rounded-full border px-3 py-1 text-sm transition-colors ${
@@ -445,7 +499,9 @@ const FormulaForm = ({
         )}
 
         {error && (
-          <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>
+          <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </p>
         )}
       </div>
 
@@ -453,7 +509,11 @@ const FormulaForm = ({
         <Button variant="outline" onClick={onClose} disabled={saving}>
           Cancelar
         </Button>
-        <Button onClick={() => submit(false)} disabled={!canSave} isLoading={saving}>
+        <Button
+          onClick={() => submit(false)}
+          disabled={!canSave}
+          isLoading={saving}
+        >
           {isNew ? "Crear" : "Guardar"}
         </Button>
       </div>
@@ -498,3 +558,70 @@ const FormulaForm = ({
     </>
   );
 };
+
+/**
+ * Las funciones que la expresión admite.
+ *
+ * Se enseñan porque el motor **no las valida al guardar**: cifrar solo
+ * comprueba que la sintaxis se pueda analizar, así que una función inventada
+ * se guarda sin protestar y falla al calcular un diseño, lejos de aquí y sin
+ * que nadie relacione una cosa con la otra.
+ *
+ * No son las de la hoja de cálculo. Esa confusión es la que este panel evita:
+ * `RAIZ` y `SUMA` no existen en la expresión, aunque sí en las plantillas.
+ */
+const MathFunctionPanel = ({
+  onInsert,
+}: {
+  onInsert: (text: string) => void;
+}) => (
+  <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3">
+    <p className="text-xs text-gray-600">
+      Las evalúa el motor de fórmulas, que <strong>no</strong> es el de las
+      plantillas: aquí <code className="font-mono">SUMA</code> o{" "}
+      <code className="font-mono">RAIZ</code> no existen, y los nombres
+      distinguen mayúsculas de minúsculas.
+    </p>
+
+    <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {MATH_FUNCTION_GROUPS.map((group) => (
+        <div key={group.title}>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            {group.title}
+          </h4>
+          <ul className="mt-1 space-y-1">
+            {group.entries.map((entry) => (
+              <li key={entry.signature}>
+                {entry.insert ? (
+                  <button
+                    type="button"
+                    data-function={entry.name}
+                    onClick={() => onInsert(entry.insert)}
+                    title={entry.description}
+                    className="w-full rounded px-1 py-0.5 text-left hover:bg-white"
+                  >
+                    <code className="font-mono text-xs text-rymel-blue">
+                      {entry.signature}
+                    </code>
+                    <span className="ml-1 text-xs text-gray-500">
+                      {entry.description}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="px-1 py-0.5">
+                    <code className="font-mono text-xs text-gray-700">
+                      {entry.signature}
+                    </code>
+                    <span className="ml-1 text-xs text-gray-500">
+                      {entry.description}
+                    </span>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+);
