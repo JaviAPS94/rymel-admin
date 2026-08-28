@@ -191,3 +191,10 @@
 - [x] 16.3 Radio: la única consulta que usaba la relación era el listado de administración de fórmulas — su filtro por subtipo y el catálogo del editor, que cuelga de él. Las demás van por `subTypeFunctionRepository` con un `where` directo
 - [x] 16.4 `check-subtype-function-filter.ts` fija el invariante contra la base: el SQL une por `design_function_id` y cada subtipo devuelve exactamente sus asignaciones vigentes. 10/10
 - [x] 16.5 El catálogo se pide además **del tipo de la plantilla**. Una hoja solo resuelve las fórmulas de su tipo —la de diseño las `DESIGN`, la de costos las `COST`—, y ofrecer las del otro tipo era ofrecer fórmulas que el cliente no iba a poder evaluar. Ninguna plantilla actual invoca fórmulas de diseño, así que el filtro no cambia nada ya guardado
+
+## 17. La barra de fórmulas no aparecía al teclear el `=`
+
+- [x] 17.1 Escribir `=` dentro de una celda no encendía el modo fórmula: había que salir de la celda y volver a entrar. La causa era la misma en los dos, **el borrador tenía dos dueños**: la celda guardaba lo que se escribía en un estado propio y el constructor de fórmulas no se enteraba hasta que el contenido se confirmaba y la celda se volvía a seleccionar
+- [x] 17.2 En el admin desaparece `editingValue`: lo que se teclea en la celda **es** `formula.draft`. Con un solo dueño no hay nada que sincronizar y no puede volver a desincronizarse
+- [x] 17.3 En el diseñador el input de la celda es no controlado a propósito —redibujar la rejilla en cada tecla es lo que esa decisión evita—, así que se mantiene y solo se avisa al reducer cuando **cambia** si el contenido es fórmula o no. Entre la transición y el `blur` nadie lee el borrador; al soltar el foco se sincroniza con el texto completo
+- [x] 17.4 `TemplateEditorPage.spec.tsx` (3) sobre la página montada, no sobre el hook: el fallo no estaba en el hook y una prueba del hook habría pasado con él puesto. Comprobado que las tres fallan si se corta el aviso al reducer. De 68 pruebas a 71

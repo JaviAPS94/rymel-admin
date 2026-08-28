@@ -53,6 +53,7 @@ export const FormulaBar = ({
 
       <input
         ref={inputRef}
+        data-testid="formula-input"
         value={draft}
         onChange={(event) => {
           onDraftChange(event.target.value);

@@ -95,8 +95,16 @@ const Editor = ({ detailId }: { detailId: number }) => {
   const discard = useDiscardDraft();
 
   const [panel, setPanel] = useState<SidePanel>("diagnostics");
+  /**
+   * Qué celda se está editando. **Lo que se escribe en ella no es estado
+   * aparte**: es `formula.draft`.
+   *
+   * Tenerlo aparte era el motivo de que la barra de fórmulas no apareciera al
+   * teclear el `=`: la celda lo sabía y el constructor no, así que había que
+   * salir de la celda y volver a entrar para que se enterara. Con un solo
+   * dueño no hay nada que sincronizar y no puede volver a desincronizarse.
+   */
   const [editing, setEditing] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState("");
   const [serverDiagnostics, setServerDiagnostics] = useState<TemplateDiagnostic[]>([]);
 
   const save = useTemplateSave(
@@ -180,31 +188,31 @@ const Editor = ({ detailId }: { detailId: number }) => {
       // Empezar a escribir sustituye el contenido, como en cualquier hoja.
       if (event.key.length === 1 && !event.metaKey && !event.ctrlKey) {
         setEditing(selection.activeRef);
-        setEditingValue(event.key);
+        formula.start(event.key, sheet?.name ?? "");
         event.preventDefault();
       } else if (event.key === "F2") {
         setEditing(selection.activeRef);
-        setEditingValue(
+        formula.start(
           sheet?.cells[selection.activeRef]?.content ?? "",
+          sheet?.name ?? "",
         );
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selection, sheet, state, save]);
+  }, [selection, sheet, state, save, formula]);
 
   const commitEditing = useCallback(
     (move: "down" | "right" | "none") => {
       if (editing && sheet) {
-        state.setCellContent(sheet.name, editing, editingValue);
+        state.setCellContent(sheet.name, editing, formula.draft);
       }
       setEditing(null);
-      setEditingValue("");
       if (move === "down") selection.move(1, 0);
       if (move === "right") selection.move(0, 1);
     },
-    [editing, editingValue, selection, sheet, state],
+    [editing, formula, selection, sheet, state],
   );
 
   /** Lleva la selección al problema que se pulsó en el panel. */
@@ -484,18 +492,18 @@ const Editor = ({ detailId }: { detailId: number }) => {
               values={state.values}
               selection={selection}
               editing={editing}
-              editingValue={editingValue}
+              editingValue={formula.draft}
               previewValue={preview.result ? previewValue : undefined}
-              onEditingValueChange={setEditingValue}
+              onEditingValueChange={formula.setDraft}
               onStartEditing={(ref) => {
                 setEditing(ref);
-                setEditingValue(sheet.cells[ref]?.content ?? "");
+                formula.start(sheet.cells[ref]?.content ?? "", sheet.name);
               }}
               onPickCell={(ref) => formula.pickCell(sheet.name, ref)}
               onCommitEditing={commitEditing}
               onCancelEditing={() => {
                 setEditing(null);
-                setEditingValue("");
+                formula.start(activeCell?.content ?? "", sheet.name);
               }}
               onResizeColumn={(column, width) =>
                 state.setSheetStyles(sheet.name, {
