@@ -1,8 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import {
   IconAlertTriangle,
-  IconChevronDown,
-  IconChevronRight,
   IconLock,
   IconMathFunction,
 } from "@tabler/icons-react";
@@ -13,10 +11,9 @@ import { Modal } from "@components/ui/Modal";
 import { FormulaVariablesEditor } from "@components/formula/FormulaVariablesEditor";
 import { FormulaConstantsEditor } from "@components/formula/FormulaConstantsEditor";
 import { FormulaTester } from "@components/formula/FormulaTester";
-import {
-  KNOWN_MATH_SYMBOLS,
-  MATH_FUNCTION_GROUPS,
-} from "@components/formula/mathFunctions";
+import { KNOWN_MATH_SYMBOLS } from "@components/formula/mathFunctions";
+import type { MathFunctionEntry } from "@components/formula/mathFunctions";
+import { MathFunctionPicker } from "@components/formula/MathFunctionPicker";
 import {
   useCreateDesignFunction,
   useDesignFunctionDetail,
@@ -170,6 +167,10 @@ const FormulaForm = ({
   const [showFunctions, setShowFunctions] = useState(false);
 
   const expressionRef = useRef<HTMLTextAreaElement>(null);
+  const functionsButtonRef = useRef<HTMLButtonElement>(null);
+
+  /** Dónde estaba el cursor al abrir el buscador, que le roba el foco. */
+  const cursorRef = useRef(0);
 
   /**
    * Inserta una función donde está el cursor.
@@ -178,12 +179,17 @@ const FormulaForm = ({
    * misma operación que en el editor de plantillas y no hay motivo para
    * escribirla otra vez, aunque aquí el texto sea de otro lenguaje.
    */
-  const insertFunction = (text: string) => {
+  const insertFunction = (entry: MathFunctionEntry) => {
     const input = expressionRef.current;
-    const at = input?.selectionStart ?? expression.length;
-    const { formula, cursor } = insertIntoFormula(expression, at, text);
+    const at = cursorRef.current;
+    const { formula, cursor } = insertIntoFormula(expression, at, entry.insert);
 
     setExpression(formula);
+    setShowFunctions(false);
+    cursorRef.current = cursor;
+
+    // Tras el repintado: hasta entonces el textarea sigue con el texto
+    // anterior y el cursor acabaría en un sitio que ya no existe.
     window.setTimeout(() => {
       input?.focus();
       input?.setSelectionRange(cursor, cursor);
@@ -376,16 +382,23 @@ const FormulaForm = ({
               {/* Sin poder editar la expresión no hay dónde insertar nada. */}
               {canEditExpression && (
                 <button
+                  ref={functionsButtonRef}
                   type="button"
                   data-action="math-functions"
-                  onClick={() => setShowFunctions((open) => !open)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-rymel-blue hover:underline"
+                  onClick={() => {
+                    // Se guarda antes de abrir: el buscador toma el foco y el
+                    // textarea deja de saber dónde estaba el cursor.
+                    cursorRef.current =
+                      expressionRef.current?.selectionStart ??
+                      expression.length;
+                    setShowFunctions((open) => !open);
+                  }}
+                  className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium ${
+                    showFunctions
+                      ? "bg-blue-50 text-rymel-blue"
+                      : "text-rymel-blue hover:bg-blue-50"
+                  }`}
                 >
-                  {showFunctions ? (
-                    <IconChevronDown className="h-3.5 w-3.5" />
-                  ) : (
-                    <IconChevronRight className="h-3.5 w-3.5" />
-                  )}
                   <IconMathFunction className="h-3.5 w-3.5" />
                   Funciones disponibles
                 </button>
@@ -423,7 +436,13 @@ const FormulaForm = ({
                 Debe tener la forma <code className="font-mono">y = …</code>
               </p>
 
-              {showFunctions && <MathFunctionPanel onInsert={insertFunction} />}
+              {showFunctions && (
+                <MathFunctionPicker
+                  anchor={functionsButtonRef.current}
+                  onInsert={insertFunction}
+                  onClose={() => setShowFunctions(false)}
+                />
+              )}
               {undeclared.length > 0 && (
                 <p className="mt-1 text-sm text-red-600">
                   Símbolos sin declarar: {undeclared.join(", ")}. Agrégalos como
@@ -558,70 +577,3 @@ const FormulaForm = ({
     </>
   );
 };
-
-/**
- * Las funciones que la expresión admite.
- *
- * Se enseñan porque el motor **no las valida al guardar**: cifrar solo
- * comprueba que la sintaxis se pueda analizar, así que una función inventada
- * se guarda sin protestar y falla al calcular un diseño, lejos de aquí y sin
- * que nadie relacione una cosa con la otra.
- *
- * No son las de la hoja de cálculo. Esa confusión es la que este panel evita:
- * `RAIZ` y `SUMA` no existen en la expresión, aunque sí en las plantillas.
- */
-const MathFunctionPanel = ({
-  onInsert,
-}: {
-  onInsert: (text: string) => void;
-}) => (
-  <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3">
-    <p className="text-xs text-gray-600">
-      Las evalúa el motor de fórmulas, que <strong>no</strong> es el de las
-      plantillas: aquí <code className="font-mono">SUMA</code> o{" "}
-      <code className="font-mono">RAIZ</code> no existen, y los nombres
-      distinguen mayúsculas de minúsculas.
-    </p>
-
-    <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {MATH_FUNCTION_GROUPS.map((group) => (
-        <div key={group.title}>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-            {group.title}
-          </h4>
-          <ul className="mt-1 space-y-1">
-            {group.entries.map((entry) => (
-              <li key={entry.signature}>
-                {entry.insert ? (
-                  <button
-                    type="button"
-                    data-function={entry.name}
-                    onClick={() => onInsert(entry.insert)}
-                    title={entry.description}
-                    className="w-full rounded px-1 py-0.5 text-left hover:bg-white"
-                  >
-                    <code className="font-mono text-xs text-rymel-blue">
-                      {entry.signature}
-                    </code>
-                    <span className="ml-1 text-xs text-gray-500">
-                      {entry.description}
-                    </span>
-                  </button>
-                ) : (
-                  <div className="px-1 py-0.5">
-                    <code className="font-mono text-xs text-gray-700">
-                      {entry.signature}
-                    </code>
-                    <span className="ml-1 text-xs text-gray-500">
-                      {entry.description}
-                    </span>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  </div>
-);

@@ -216,9 +216,19 @@
 
 ## 20. Ayuda con las funciones disponibles en la expresión
 
-- [x] 20.1 «Funciones disponibles» junto a la expresión, plegable, agrupado y con inserción en el cursor. La inserción la hace `insertIntoFormula` del motor compartido: es la misma operación que en el editor de plantillas
+- [x] 20.1 «Funciones disponibles» junto a la expresión, con inserción en el cursor. La inserción la hace `insertIntoFormula` del motor compartido: es la misma operación que en el editor de plantillas
 - [x] 20.2 **No es el listado de la hoja de cálculo**, que era lo pedido. La expresión no la evalúa `@rymel/formula-engine` sino el motor cifrado, que por dentro es `mathjs`: comprobado contra el motor vivo, `SUMA`, `SI`, `REDONDEAR` y `RAIZ` dan «Undefined function». Ofrecerlas habría sido ofrecer fórmulas que fallan
 - [x] 20.3 El motor **no valida los nombres al guardar** —cifrar solo comprueba que la sintaxis se pueda analizar—, así que `y = RAIZ(x)` se guardaba sin protestar y fallaba al calcular un diseño, lejos y sin relación aparente. De ahí que el listado valga la pena
 - [x] 20.4 Corregido de paso el aviso de símbolos sin declarar, que llevaba una lista incrustada equivocada en los dos sentidos: daba por buena `ln` —que mathjs no tiene— y marcaba como error `log10`, `atan`, `asin`, `acos`, `mod`, `sign` y una docena más, que sí funcionan. Ahora usa el mismo catálogo
 - [x] 20.5 `check-math-catalog.mjs` cifra y evalúa cada símbolo del catálogo contra el motor real, y comprueba además que las de la hoja de cálculo sigan sin existir. 40 símbolos verificados
 - [x] 20.6 `mathFunctions.spec.ts` (7) sobre lo que no necesita el motor levantado: que las dos listas no se contradigan y que no vuelva a colarse un nombre inexistente. De 76 pruebas a 83
+
+## 21. El listado de funciones empujaba el modal
+
+- [x] 21.1 En línea, cuarenta entradas desplazaban hacia abajo las variables, las constantes y el probador, dentro de un modal que ya vive con `overflow-y-auto`: consultar qué funciones había obligaba a perder de vista lo que se estaba escribiendo
+- [x] 21.2 Pasa a ser un panel que **flota y no empuja**. `position: fixed` calculado desde el botón y no `absolute`, porque ese mismo `overflow-y-auto` lo habría recortado. Se recoloca al redimensionar y al desplazar —el scroll se escucha en captura, porque el del modal no llega a `window`— y se abre hacia arriba cuando abajo no cabe
+- [x] 21.3 Se busca en vez de recorrer: filtro por firma y descripción, `↑`/`↓` y `Enter`. Cuarenta entradas en seis grupos se leen enteras cada vez; escribiendo «raíz» quedan dos. Las flechas saltan los títulos de grupo y la notación, que no se insertan
+- [x] 21.4 Una columna densa con títulos pegajosos en vez de una rejilla de tres: una lista de referencia se recorre en vertical, y la rejilla obligaba a leer en zigzag
+- [x] 21.5 El cursor se guarda **antes** de abrir, porque el buscador toma el foco y el `textarea` deja de saber dónde estaba
+- [x] 21.6 `MathFunctionPicker.spec.tsx` (9), sin necesidad de simular ningún hook. De 83 pruebas a 92
+- [x] 21.7 Corregido un comentario que afirmaba que el modal escucha `Escape`. No lo escucha: detener la propagación no arregla nada visible hoy, y decir lo contrario habría hecho creer que sí

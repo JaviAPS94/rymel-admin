@@ -53,7 +53,10 @@ export const FormulaVariablesEditor = ({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-gray-700">
-          Variables <span className="text-gray-400">(el orden es el de los argumentos)</span>
+          Variables{" "}
+          <span className="text-gray-400">
+            (el orden es el de los argumentos)
+          </span>
         </label>
         {!disabled && (
           <button

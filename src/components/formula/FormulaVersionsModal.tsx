@@ -45,7 +45,9 @@ export const FormulaVersionsModal = ({
       maxWidth="xl"
     >
       <div className="max-h-[60vh] overflow-y-auto p-6">
-        {versions.isLoading && <p className="text-sm text-gray-500">Cargando…</p>}
+        {versions.isLoading && (
+          <p className="text-sm text-gray-500">Cargando…</p>
+        )}
 
         {versions.data?.length === 0 && (
           <p className="text-sm text-gray-500">Sin versiones registradas.</p>

@@ -28,11 +28,14 @@ export const FormulaTester = ({
   const test = useTestExpression();
 
   const named = variables.filter((variable) => variable.trim() !== "");
-  const missing = named.filter((variable) => (values[variable] ?? "").trim() === "");
+  const missing = named.filter(
+    (variable) => (values[variable] ?? "").trim() === "",
+  );
 
   const run = () => {
     const parameters: Record<string, number> = {};
-    for (const variable of named) parameters[variable] = Number(values[variable]);
+    for (const variable of named)
+      parameters[variable] = Number(values[variable]);
     test.mutate({
       expression,
       parameters,
@@ -93,7 +96,9 @@ export const FormulaTester = ({
           {test.data.ok ? (
             <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
               Resultado:{" "}
-              <span className="font-mono font-semibold">{test.data.result}</span>
+              <span className="font-mono font-semibold">
+                {test.data.result}
+              </span>
             </p>
           ) : (
             <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">

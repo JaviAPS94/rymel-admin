@@ -91,7 +91,7 @@ export const StaleSubDesignsPanel = () => {
           <tbody className="divide-y divide-gray-100">
             {items.map((item) => {
               const outcome = report?.outcomes.find(
-                (result) => result.subDesignId === item.id
+                (result) => result.subDesignId === item.id,
               );
               return (
                 <tr key={item.id}>
@@ -103,7 +103,7 @@ export const StaleSubDesignsPanel = () => {
                         setSelected(
                           selected.includes(item.id)
                             ? selected.filter((id) => id !== item.id)
-                            : [...selected, item.id]
+                            : [...selected, item.id],
                         )
                       }
                       className="h-4 w-4 rounded border-gray-300"
@@ -144,8 +144,8 @@ export const StaleSubDesignsPanel = () => {
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm">
           <p className="font-medium text-gray-900">Resultado del recálculo</p>
           <p className="mt-1 text-gray-600">
-            {report.recalculated} recalculados · {report.unchanged} sin cambios ·{" "}
-            {report.skipped} sin fórmulas · {report.failed} no se pudieron
+            {report.recalculated} recalculados · {report.unchanged} sin cambios
+            · {report.skipped} sin fórmulas · {report.failed} no se pudieron
           </p>
 
           {report.outcomes
