@@ -8,6 +8,11 @@ import { PhantomItemHeaderForm } from "@components/phantom-item/PhantomItemHeade
 import { PhantomItemGrid, type GridSelection } from "@components/phantom-item/PhantomItemGrid";
 import { FormulaBar } from "@components/phantom-item/FormulaBar";
 import { COLUMNS, getColumnByLetter } from "@components/phantom-item/columns";
+
+/** Columnas del componente distintas de M: si alguna tiene algo, la fila se quiso usar. */
+const COMPONENT_LETTERS = COLUMNS.filter(
+  (column) => column.scope === "component" && column.letter !== "M",
+).map((column) => column.letter);
 import { usePhantomItemGrid, type UsePhantomItemGridResult } from "@hooks/usePhantomItemGrid";
 import { usePhantomItem, useCreatePhantomItem, useUpdatePhantomItem } from "@hooks/usePhantomItems";
 import { useAuthStore } from "@store/authStore";
@@ -48,6 +53,10 @@ const buildSavePayload = (grid: UsePhantomItemGridResult): CreatePhantomItemDto 
 
   dto.components = Array.from({ length: grid.rowCount }, (_, i) => i + 1)
     .map((row) => {
+      // Una fila sin código de componente no se envía: la columna es la
+      // identidad del componente y el servidor la exige. `rowsWithoutItemCode`
+      // impide llegar hasta aquí con filas así, para que descartarlas nunca
+      // sea silencioso.
       const componentItemCode = String(grid.getCell("M", row).computed ?? "").trim();
       if (!componentItemCode) return null;
 
@@ -117,8 +126,39 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
     (row) => grid.isOverLimit("G", row) || grid.isOverLimit("I", row) || grid.isOverLimit("K", row),
   );
 
+  /**
+   * Filas que no se guardarían por no tener «ÍTEM - COMPONENTE».
+   *
+   * Antes se descartaban en silencio: se agregaba un componente, se pulsaba
+   * «Guardar», el editor decía que todo había ido bien y al volver a entrar no
+   * estaba. Se comprueba antes de enviar y se dice qué fila falta.
+   *
+   * Una única fila entera en blanco no cuenta: es la fila vacía con la que
+   * empieza un fantasma sin componentes, y no es un olvido de nadie.
+   */
+  const rowsWithoutItemCode = Array.from(
+    { length: grid.rowCount },
+    (_, i) => i + 1,
+  ).filter((row) => {
+    if (String(grid.getCell("M", row).computed ?? "").trim() !== "") return false;
+    return COMPONENT_LETTERS.some(
+      (letter) => String(grid.getCell(letter, row).computed ?? "").trim() !== "",
+    );
+  });
+
   const handleSave = async () => {
     setValidationErrors([]);
+
+    if (rowsWithoutItemCode.length > 0) {
+      setValidationErrors([
+        `Falta «ÍTEM - COMPONENTE» en ${
+          rowsWithoutItemCode.length === 1 ? "la fila" : "las filas"
+        } ${rowsWithoutItemCode.join(", ")}. Sin ese código el componente no se ` +
+          "puede guardar.",
+      ]);
+      return;
+    }
+
     const payload = buildSavePayload(grid);
 
     try {

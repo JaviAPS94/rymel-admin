@@ -96,6 +96,25 @@ export const buildEmptyCells = (): CellGrid => {
   return cells;
 };
 
+/**
+ * Traduce una fórmula de longitud escrita en el dialecto del servidor.
+ *
+ * El servidor mide campos por su nombre —`=LARGO(reference)`— porque calcula
+ * sin rejilla; aquí se evalúan referencias de celda, y `reference` no es
+ * ninguna. Sin traducir, una fórmula guardada así da `#ERROR` en la fila
+ * cargada mientras las filas nuevas, que usan `=LARGO(F2)`, salen bien.
+ *
+ * El servidor ya no manda las suyas por defecto, así que esto solo alcanza a
+ * lo que alguien haya guardado de verdad. Se traduce en vez de descartarlo
+ * porque descartarlo sería perder en silencio una decisión del usuario.
+ */
+const translateFieldFormula = (formula: string, row: number): string =>
+  formula.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\b/g, (name) => {
+    if (name.toUpperCase() === "LARGO") return name;
+    const column = COLUMNS.find((item) => item.field === name);
+    return column ? `${column.letter}${row}` : name;
+  });
+
 /** Rebuilds a `CellGrid` from a persisted phantom item's header + components. */
 export const buildCellsFromDetail = (detail: PhantomItemDetail): CellGrid => {
   const cells: CellGrid = {};
@@ -120,7 +139,10 @@ export const buildCellsFromDetail = (detail: PhantomItemDetail): CellGrid => {
           );
         }
       } else if (column.scope === "derived") {
-        formula = detail.formulaOverrides?.[column.field] ?? column.defaultFormula?.(row) ?? "";
+        const override = detail.formulaOverrides?.[column.field];
+        formula = override
+          ? translateFieldFormula(override, row)
+          : (column.defaultFormula?.(row) ?? "");
       } else if (component) {
         const override = component.formulaOverrides?.[column.field];
         formula =
