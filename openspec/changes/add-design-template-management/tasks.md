@@ -183,3 +183,11 @@
   - Un rango se califica en sus **dos extremos**. La copia vieja armaba siempre `B45:C156` sin hoja, así que un rango con otra hoja seleccionada como destino apuntaba a celdas de la hoja actual — no daba error, daba otro número
   - Un nombre de hoja con espacios va entre comillas simples: `'Template 1F'!A11`. Sin ellas el analizador no lo lee
   - Ninguno de los dos toca un diseño ya guardado: solo cambian las fórmulas que se escriban a partir de ahora
+
+## 16. El catálogo del editor estaba vacío
+
+- [x] 16.1 `TEMPLATE_1F_002` no ofrecía ninguna fórmula pese a tener 5 asignadas a su subtipo. La causa no estaba en el editor: `DesignFunction.designSubTypeFunctions` declaraba la inversa equivocada, así que TypeORM unía `stf.design_subtype_id` contra `f.id`. Filtrar por el subtipo 1 exigía además `f.id = 1` y devolvía cero filas — sin error, solo una lista vacía
+- [x] 16.2 Es una copia del bloque idéntico de `DesignSubType`, donde la inversa sí es `designSubType`. El diseñador nunca lo notó porque carga las fórmulas desde el otro lado de la relación
+- [x] 16.3 Radio: la única consulta que usaba la relación era el listado de administración de fórmulas — su filtro por subtipo y el catálogo del editor, que cuelga de él. Las demás van por `subTypeFunctionRepository` con un `where` directo
+- [x] 16.4 `check-subtype-function-filter.ts` fija el invariante contra la base: el SQL une por `design_function_id` y cada subtipo devuelve exactamente sus asignaciones vigentes. 10/10
+- [x] 16.5 El catálogo se pide además **del tipo de la plantilla**. Una hoja solo resuelve las fórmulas de su tipo —la de diseño las `DESIGN`, la de costos las `COST`—, y ofrecer las del otro tipo era ofrecer fórmulas que el cliente no iba a poder evaluar. Ninguna plantilla actual invoca fórmulas de diseño, así que el filtro no cambia nada ya guardado

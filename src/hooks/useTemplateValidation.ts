@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { validateTemplate } from "@rymel/design-template";
 import type { CustomFunctionDefinition } from "@rymel/formula-engine";
 import { designFunctionService } from "@services/designFunctionService";
+import type { DesignFunctionType } from "@/types/designFunction.types";
 import type {
   TemplateDiagnostic,
   TemplateDocument,
@@ -66,9 +67,20 @@ export const useTemplateValidation = (
   document: TemplateDocument,
   designSubTypeId?: number,
 ): UseTemplateValidationResult => {
+  /**
+   * Del subtipo **y de su tipo**.
+   *
+   * Una hoja solo resuelve las fórmulas de su tipo: la de diseño llama a las
+   * `DESIGN` y la de costos a las `COST`. Ofrecer las del otro tipo sería
+   * ofrecer fórmulas que el diseñador no va a poder evaluar, y el fallo no
+   * aparecería aquí sino en el cliente, al abrir el diseño.
+   */
+  const type = document.type as DesignFunctionType;
+
   const subTypeFunctions = useQuery({
-    queryKey: ["design-functions", "by-subtype", designSubTypeId],
-    queryFn: () => designFunctionService.list({ designSubTypeId, limit: 200 }),
+    queryKey: ["design-functions", "by-subtype", designSubTypeId, type],
+    queryFn: () =>
+      designFunctionService.list({ designSubTypeId, type, limit: 200 }),
     enabled: designSubTypeId !== undefined,
     staleTime: 5 * 60 * 1000,
   });
