@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildGraph,
   buildRegistry,
@@ -38,6 +38,14 @@ import {
  * se escribe.
  */
 export const FORMULA_PENDING = "…";
+
+/**
+ * El catálogo vacío, como constante.
+ *
+ * Un `= []` en el parámetro construye un array nuevo en cada render, y todo lo
+ * que se memoice a partir de él cambia de identidad en cada render con él.
+ */
+const NO_FUNCTIONS: readonly CustomFunctionDefinition[] = [];
 
 /**
  * Cuántos pasos se pueden deshacer. Suficiente para una sesión de trabajo sin
@@ -187,7 +195,7 @@ const recalculateBook = (
  */
 export const useTemplateDocument = (
   initial: TemplateDocument,
-  designFunctions: readonly CustomFunctionDefinition[] = [],
+  designFunctions: readonly CustomFunctionDefinition[] = NO_FUNCTIONS,
 ): UseTemplateDocumentResult => {
   const registry = useMemo(
     () => buildRegistry(designFunctions),
@@ -252,6 +260,32 @@ export const useTemplateDocument = (
     },
     [recalculate],
   );
+
+  /**
+   * El catálogo de fórmulas de diseño llega por red, después del primer
+   * cálculo.
+   *
+   * Sin esto, una plantilla guardada que invoca `=QUADRATIC(5)` se abría con
+   * `#ERROR` en esa celda y ahí se quedaba: al montar, el catálogo todavía
+   * estaba vacío, así que `QUADRATIC` era una función que nadie conocía. El
+   * panel de problemas decía que la plantilla estaba bien —él sí esperaba al
+   * catálogo—, lo que hacía el fallo más difícil de creer que de ver.
+   *
+   * Se recalcula el libro entero cuando el catálogo cambia, y solo entonces:
+   * es una vez por carga, no una por edición.
+   */
+  const documentRef = useRef(document);
+  documentRef.current = document;
+  //  Por contenido y no por identidad: un `[]` escrito en la llamada es un
+  //  array nuevo en cada render, y comparar identidades ahí es un bucle.
+  const catalogKey = designFunctions.map((item) => item.code).join(",");
+  const seededCatalog = useRef(catalogKey);
+
+  useEffect(() => {
+    if (seededCatalog.current === catalogKey) return;
+    seededCatalog.current = catalogKey;
+    rebuild(documentRef.current);
+  }, [catalogKey, rebuild]);
 
   const markDirty = useCallback((name: string) => {
     setDirtySheets((previous) => new Set(previous).add(name));

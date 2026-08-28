@@ -205,3 +205,11 @@
 - [x] 18.2 El diseñador no lo sufre porque confirma `inputRef.current.value` —el propio input, no controlado—, que ningún cambio de selección puede pisar. En el admin el input es controlado, así que la guarda va en la resincronización: mientras se edita una celda, el borrador es suyo y no se reescribe
 - [x] 18.3 Seleccionar una celda con fórmula marcaba dos o tres celdas hacia arriba. No era un arrastre: al aparecer la barra del modo fórmula la rejilla baja y las celdas desfilan por debajo de un puntero pulsado que no se ha movido, y `onMouseEnter` lo leía como arrastre. Ahora se exige movimiento real del puntero desde la pulsación
 - [x] 18.4 Cuatro pruebas más sobre la página montada, comprobadas al revés —fallan si se quita cada arreglo—. `data-selected` en la celda para poder leer qué se pinta como seleccionado. De 71 pruebas a 74
+
+## 19. `#ERROR` al abrir una plantilla que invoca una fórmula de diseño
+
+- [x] 19.1 `=QUADRATIC(5)` se pintaba como `#ERROR` la primera vez que se abría la plantilla. El catálogo de fórmulas se pide por red y llega **después** del primer cálculo, que se hacía una sola vez al montar: en ese momento `QUADRATIC` no era una función conocida. El panel de problemas decía que la plantilla estaba bien porque él sí esperaba al catálogo, lo que hacía el fallo más difícil de creer que de ver
+- [x] 19.2 El libro se recalcula entero cuando el catálogo cambia. Una vez por carga, no una por edición
+- [x] 19.3 El catálogo se compara **por contenido y no por identidad**: el `= []` del parámetro construía un array nuevo en cada render, así que comparar identidades era un bucle infinito. El vacío pasa a ser una constante del módulo
+- [x] 19.4 Además no se pinta la plantilla hasta tener el catálogo, como hace el diseñador —que no monta la hoja sin él—. Corregirse sola ya estaba garantizado; enseñar el `#ERROR` mientras tanto no aportaba nada
+- [x] 19.5 Dos pruebas sobre el hook montado, comprobadas al revés. De 74 pruebas a 76

@@ -319,6 +319,23 @@ const Editor = ({ detailId }: { detailId: number }) => {
     );
   };
 
+  /**
+   * No se pinta la plantilla hasta tener el catálogo de fórmulas de diseño.
+   *
+   * Es lo que hace el diseñador, que no monta la hoja hasta tenerlo. Sin
+   * esperar, las celdas que invocan una fórmula de diseño se pintan un
+   * instante con `#ERROR` —al montar, `QUADRATIC` no es una función conocida—
+   * y se corrigen solas cuando el catálogo llega. Corregirse solas ya está
+   * garantizado; enseñar el error mientras tanto no aporta nada.
+   */
+  if (validation.isLoadingFunctions) {
+    return (
+      <Layout>
+        <p className="text-sm text-gray-500">Cargando fórmulas de diseño…</p>
+      </Layout>
+    );
+  }
+
   if (!sheet) {
     return (
       <Layout>

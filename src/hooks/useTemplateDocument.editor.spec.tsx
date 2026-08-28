@@ -199,3 +199,51 @@ describe("lo que el editor acaba enviando", () => {
     expect(payload(result.current).cells.A1).toEqual({ formula: "Título" });
   });
 });
+
+describe("el catálogo de fórmulas de diseño llega tarde", () => {
+  /** Una plantilla guardada que ya invoca una fórmula de diseño. */
+  const conFormulaDeDiseno = (): TemplateDocument => ({
+    ...document(),
+    sheets: [
+      {
+        name: "Hoja1",
+        position: 0,
+        cells: { D7: { content: "=QUADRATIC(5)" } },
+        styles: emptySheetStyles(),
+      },
+    ],
+  });
+
+  const QUADRATIC = [{ id: 10, code: "QUADRATIC", variables: ["x"] }];
+
+  it("la celda queda pendiente, no en error, cuando el catálogo aparece", () => {
+    // El catálogo se pide por red y llega después del primer render. Si el
+    // libro solo se calcula al montar, `QUADRATIC` es una función que nadie
+    // conoce y la celda se queda con `#ERROR` para siempre: la plantilla se
+    // abre rota aunque la fórmula sea correcta.
+    const doc = conFormulaDeDiseno();
+    const { result, rerender } = renderHook(
+      ({ functions }) => useTemplateDocument(doc, functions),
+      { initialProps: { functions: [] as typeof QUADRATIC } },
+    );
+
+    expect(result.current.values["Hoja1!D7"]).toBe("#ERROR");
+
+    rerender({ functions: QUADRATIC });
+
+    expect(result.current.values["Hoja1!D7"]).toBe("…");
+  });
+
+  it("recalcular después no vuelve a romperla", () => {
+    const doc = conFormulaDeDiseno();
+    const { result, rerender } = renderHook(
+      ({ functions }) => useTemplateDocument(doc, functions),
+      { initialProps: { functions: [] as typeof QUADRATIC } },
+    );
+
+    rerender({ functions: QUADRATIC });
+    act(() => result.current.setCellContent("Hoja1", "A1", "1"));
+
+    expect(result.current.values["Hoja1!D7"]).toBe("…");
+  });
+});

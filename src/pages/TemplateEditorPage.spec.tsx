@@ -34,10 +34,10 @@ const detail: TemplateDetail = {
     sheets: [
       {
         name: "Hoja1",
-        order: 0,
+        position: 0,
         cells: {
-          A1: { kind: "formula", content: "=SUMA(B1:B5)" },
-          B1: { kind: "literal", content: "1" },
+          A1: { content: "=SUMA(B1:B5)" },
+          B1: { content: "1" },
         },
         styles: emptySheetStyles(),
       },
