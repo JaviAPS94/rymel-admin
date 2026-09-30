@@ -72,7 +72,7 @@
 
 - [x] 7.1 Extendido el ida y vuelta existente (`roundtrip-template.ts` + `check-roundtrip.ts`) en vez de escribir otro: la plantilla de prueba lleva etiquetas de catálogo, condiciones, ítem vinculado con cantidad, MO y MD, zona que contiene el vínculo y zona de solo lectura. Se publica contra la base real, se lee por la ruta de la biblioteca y el diseñador obtiene código MO=3000/MD=18 y resumen BOM `AC-1 · Acero al silicio · 18 · kg`. De 17 a 22 comprobaciones en el lado del diseñador, todas en verde; la plantilla se borra al terminar
 - [x] 7.1b La zona de solo lectura viaja del admin a la biblioteca y al diseñador (`check-roundtrip.ts`), y del diseño guardado al reabierto (`check-read-only.ts`); el servidor rechaza alterarla (`check-read-only-guard.ts`). **Pendiente de probar a mano en el navegador** que la celda no se deja editar: `project-front` no tiene entorno de pruebas de componentes
-- [ ] 7.1c Habilitar la protección en el admin (paso 6 del Migration Plan)
+- [x] 7.1c Protección encendida por omisión en el admin (`VITE_READ_ONLY_ZONES !== "false"`): todo el proyecto corre en local con el diseñador que las cumple. La variable queda como interruptor para apagarla en un despliegue donde el diseñador vaya por detrás
 - [x] 7.2 `copilot-rules.md`: sección «Qué configura la plantilla y qué es del diseñador», con el porqué medido, la regla única de solo lectura y la de que menú y paneles escriben por las mismas mutaciones; `VITE_READ_ONLY_ZONES` en la tabla de variables y en `.env.example`. Tag del contrato actualizado a v2.1.0, que seguía diciendo v1.1.0
 
 ## 8. Composición de fórmulas: comprobación previa (solo lectura)

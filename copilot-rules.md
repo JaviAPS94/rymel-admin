@@ -188,8 +188,9 @@ calculado), no devolviéndole al diseñador la escritura.
 Las zonas de solo lectura se cumplen en tres sitios con **una sola regla**,
 `isReadOnly` del contrato: el editor las señala, el diseñador no deja
 escribir en ellas y `project-back` rechaza la actualización de un diseño que
-las altere. La acción de proteger se enciende con `VITE_READ_ONLY_ZONES=true`
-cuando la versión del diseñador que las cumple está desplegada.
+las altere. La acción de proteger está encendida por omisión; se apaga con
+`VITE_READ_ONLY_ZONES=false` en un despliegue donde el diseñador vaya por
+detrás.
 
 El menú contextual y los paneles escriben por las mismas mutaciones
 (`updateCell`, `setSheetStyles`, `setMaterialTag`) y los mismos formularios
@@ -225,7 +226,7 @@ versión mayor del contrato.
 | Variable | Descripción |
 |---|---|
 | `VITE_API_URL` | URL de `project-back`. Por omisión `http://localhost:3000`. |
-| `VITE_READ_ONLY_ZONES` | `true` ofrece proteger zonas como solo lectura. Apagado por omisión hasta que el diseñador que las cumple esté desplegado. |
+| `VITE_READ_ONLY_ZONES` | Zonas de solo lectura, encendidas por omisión. `false` las apaga si el diseñador desplegado aún no las cumple. |
 
 ## Notas Adicionales
 
