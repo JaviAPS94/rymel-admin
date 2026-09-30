@@ -2,13 +2,18 @@ import { useState } from "react";
 import { IconPlayerPlay } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { useTestExpression } from "@hooks/useDesignFunctions";
-import type { ConstantEntry } from "@/types/designFunction.types";
+import type {
+  ConstantEntry,
+  DesignFunctionType,
+} from "@/types/designFunction.types";
 import { entriesToConstants } from "@/types/designFunction.types";
 
 interface FormulaTesterProps {
   expression: string;
   variables: string[];
   constants: ConstantEntry[];
+  /** Para que el servidor resuelva las fórmulas que la expresión invoca. */
+  type?: DesignFunctionType;
 }
 
 /**
@@ -23,6 +28,7 @@ export const FormulaTester = ({
   expression,
   variables,
   constants,
+  type,
 }: FormulaTesterProps) => {
   const [values, setValues] = useState<Record<string, string>>({});
   const test = useTestExpression();
@@ -37,6 +43,7 @@ export const FormulaTester = ({
     for (const variable of named)
       parameters[variable] = Number(values[variable]);
     test.mutate({
+      type,
       expression,
       parameters,
       constants: entriesToConstants(constants),

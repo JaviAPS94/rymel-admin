@@ -11,13 +11,18 @@ import { Modal } from "@components/ui/Modal";
 import { FormulaVariablesEditor } from "@components/formula/FormulaVariablesEditor";
 import { FormulaConstantsEditor } from "@components/formula/FormulaConstantsEditor";
 import { FormulaTester } from "@components/formula/FormulaTester";
-import { KNOWN_MATH_SYMBOLS } from "@components/formula/mathFunctions";
+import {
+  formulaGroup,
+  isCompositionError,
+  KNOWN_MATH_SYMBOLS,
+} from "@components/formula/mathFunctions";
 import type { MathFunctionEntry } from "@components/formula/mathFunctions";
 import { MathFunctionPicker } from "@components/formula/MathFunctionPicker";
 import {
   useCreateDesignFunction,
   useDesignFunctionDetail,
   useDesignFunctionImpact,
+  useDesignFunctions,
   useDesignSubTypes,
   usePublishVersion,
   useSetSubTypes,
@@ -28,6 +33,7 @@ import {
   DesignFunctionType,
   entriesToConstants,
   type ConstantEntry,
+  type FunctionSummary,
 } from "@/types/designFunction.types";
 
 interface FormulaEditorModalProps {
@@ -118,6 +124,8 @@ export const FormulaEditorModal = ({
         <FormulaForm
           // Remontar al cambiar de fórmula: cada una arranca con su estado.
           key={functionId ?? "nueva"}
+          invokes={detail.data?.invokes ?? []}
+          invokedBy={detail.data?.invokedBy ?? []}
           functionId={functionId}
           initial={initial}
           expressionUnavailable={detail.data?.expressionUnavailable}
@@ -131,6 +139,9 @@ export const FormulaEditorModal = ({
 interface FormulaFormProps {
   functionId: number | null;
   initial: InitialValues;
+  /** Fórmulas que invoca la versión vigente, y las que la invocan. */
+  invokes: FunctionSummary[];
+  invokedBy: FunctionSummary[];
   expressionUnavailable?: string;
   onClose: () => void;
 }
@@ -138,6 +149,8 @@ interface FormulaFormProps {
 const FormulaForm = ({
   functionId,
   initial,
+  invokes,
+  invokedBy,
   expressionUnavailable,
   onClose,
 }: FormulaFormProps) => {
@@ -163,6 +176,8 @@ const FormulaForm = ({
     initial.subTypeIds,
   );
   const [error, setError] = useState<string | null>(null);
+  /** Un error de lo que la expresión invoca: va junto a ella, no al pie. */
+  const [compositionError, setCompositionError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string[] | null>(null);
   const [showFunctions, setShowFunctions] = useState(false);
 
@@ -196,6 +211,24 @@ const FormulaForm = ({
     }, 0);
   };
 
+  /**
+   * Las fórmulas que esta expresión puede invocar: las activas de su mismo
+   * tipo, menos ella misma. Una fórmula de costos no resuelve fórmulas de
+   * diseño, ni al revés.
+   */
+  const invocable = useDesignFunctions({ type, limit: 200 });
+  const formulas = useMemo(
+    () =>
+      (invocable.data?.items ?? []).filter(
+        (item) => !item.deleted && item.id !== functionId && item.code !== code,
+      ),
+    [invocable.data, functionId, code],
+  );
+  const formulaGroups = useMemo(
+    () => (formulas.length > 0 ? [formulaGroup(formulas)] : []),
+    [formulas],
+  );
+
   /** Orden con el que se publicó la versión vigente. */
   const originalVariables = initial.variables;
 
@@ -215,6 +248,9 @@ const FormulaForm = ({
     const declared = new Set([
       ...variables.map((item) => item.trim()),
       ...constants.map((item) => item.name.trim()),
+      // Invocar otra fórmula no es un símbolo sin declarar: el servidor
+      // comprueba luego que exista, su aridad y que no haya ciclos.
+      ...formulas.map((item) => item.code),
     ]);
     // El catálogo es el mismo que se ofrece al escribir, y está comprobado
     // contra el motor. La lista que había aquí incluía `ln` —que mathjs no
@@ -227,10 +263,17 @@ const FormulaForm = ({
         ),
       ),
     ];
-  }, [expression, variables, constants, canEditExpression]);
+  }, [expression, variables, constants, canEditExpression, formulas]);
+
+  const reportError = (err: unknown) => {
+    const message = errorMessageOf(err);
+    if (isCompositionError(message)) setCompositionError(message);
+    else setError(message);
+  };
 
   const submit = (acceptWarnings = false) => {
     setError(null);
+    setCompositionError(null);
 
     if (isNew) {
       create.mutate(
@@ -245,7 +288,7 @@ const FormulaForm = ({
         },
         {
           onSuccess: () => onClose(),
-          onError: (err) => setError(errorMessageOf(err)),
+          onError: reportError,
         },
       );
       return;
@@ -289,7 +332,7 @@ const FormulaForm = ({
                       .split("; "),
                   );
                 } else {
-                  setError(message);
+                  reportError(err);
                 }
               },
             },
@@ -426,7 +469,10 @@ const FormulaForm = ({
               <textarea
                 ref={expressionRef}
                 value={expression}
-                onChange={(event) => setExpression(event.target.value)}
+                onChange={(event) => {
+                  setExpression(event.target.value);
+                  setCompositionError(null);
+                }}
                 rows={2}
                 spellCheck={false}
                 placeholder="y = x^2 + CONST_1"
@@ -438,10 +484,16 @@ const FormulaForm = ({
 
               {showFunctions && (
                 <MathFunctionPicker
+                  extraGroups={formulaGroups}
                   anchor={functionsButtonRef.current}
                   onInsert={insertFunction}
                   onClose={() => setShowFunctions(false)}
                 />
+              )}
+              {compositionError && (
+                <p role="alert" className="mt-1 text-sm text-red-600">
+                  {compositionError}
+                </p>
               )}
               {undeclared.length > 0 && (
                 <p className="mt-1 text-sm text-red-600">
@@ -468,6 +520,7 @@ const FormulaForm = ({
 
         {canEditExpression && (
           <FormulaTester
+            type={type}
             expression={expression}
             variables={variables}
             constants={constants}
@@ -508,12 +561,34 @@ const FormulaForm = ({
           </div>
         )}
 
+        {(invokes.length > 0 || invokedBy.length > 0) && (
+          <div className="space-y-1 rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+            {invokes.length > 0 && (
+              <p>
+                Invoca: <FunctionList items={invokes} />
+              </p>
+            )}
+            {invokedBy.length > 0 && (
+              <p>
+                La invoca{invokedBy.length === 1 ? "" : "n"}:{" "}
+                <FunctionList items={invokedBy} />. Una versión nueva cambia
+                también su resultado.
+              </p>
+            )}
+          </div>
+        )}
+
         {impact.data && impact.data.subDesignCount > 0 && (
           <p className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
             Esta fórmula la usan <strong>{impact.data.subDesignCount}</strong>{" "}
             sub-diseño(s) en <strong>{impact.data.designCount}</strong>{" "}
-            diseño(s). Publicar una versión nueva no cambiará sus valores, pero
-            los marcará como desactualizados.
+            diseño(s)
+            {(impact.data.invokedBy?.length ?? 0) > 0 &&
+              `, contando los que la usan a través de ${impact.data.invokedBy!
+                .map((item) => item.code)
+                .join(", ")}`}
+            . Publicar una versión nueva no cambiará sus valores, pero los
+            marcará como desactualizados.
           </p>
         )}
 
@@ -577,3 +652,15 @@ const FormulaForm = ({
     </>
   );
 };
+
+const FunctionList = ({ items }: { items: FunctionSummary[] }) => (
+  <>
+    {items.map((item, index) => (
+      <span key={item.id}>
+        {index > 0 && ", "}
+        <span className="font-mono font-medium">{item.code}</span>
+        <span className="text-gray-500"> ({item.name})</span>
+      </span>
+    ))}
+  </>
+);

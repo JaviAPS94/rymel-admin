@@ -53,6 +53,17 @@ export interface DesignFunctionDetail {
   version: number;
   versionId: number;
   designSubTypeIds: number[];
+  /** Fórmulas que invoca su versión vigente. */
+  invokes?: FunctionSummary[];
+  /** Fórmulas cuya versión vigente la invoca. */
+  invokedBy?: FunctionSummary[];
+}
+
+/** Una fórmula nombrada, para listarla junto a otra. */
+export interface FunctionSummary {
+  id: number;
+  code: string;
+  name: string;
 }
 
 export interface DesignFunctionVersion {
@@ -72,6 +83,8 @@ export interface DesignFunctionImpact {
   subDesignCount: number;
   designCount: number;
   staleSubDesignCount: number;
+  /** Fórmulas que la invocan, directa o indirectamente: sus diseños cuentan como afectados. */
+  invokedBy?: FunctionSummary[];
 }
 
 export interface ListDesignFunctionsParams {
@@ -119,6 +132,8 @@ export interface TestExpressionDto {
   expression: string;
   parameters: Record<string, number>;
   constants?: Record<string, number>;
+  /** Para resolver las fórmulas que invoca, que tienen que ser de su tipo. */
+  type?: DesignFunctionType;
 }
 
 export interface TestExpressionResult {
