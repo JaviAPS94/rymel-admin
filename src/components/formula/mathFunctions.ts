@@ -40,6 +40,43 @@ export interface MathFunctionGroup {
   entries: MathFunctionEntry[];
 }
 
+/**
+ * Las fórmulas de diseño que la expresión puede invocar, como un grupo más.
+ *
+ * Se insertan con sus variables como marcadores —`QUADRATIC(x)`—, igual que
+ * en el editor de plantillas: el orden de los argumentos es contrato, y verlo
+ * escrito es la forma más barata de no equivocarlo.
+ */
+export const formulaGroup = (
+  formulas: readonly { code: string; name: string; variables: string }[],
+): MathFunctionGroup => ({
+  title: "Fórmulas de diseño",
+  entries: formulas.map((formula) => {
+    const variables = formula.variables
+      .split(",")
+      .map((variable) => variable.trim())
+      .filter(Boolean);
+    const signature = `${formula.code}(${variables.join(", ")})`;
+    return {
+      name: formula.code,
+      signature,
+      description: formula.name,
+      insert: signature,
+    };
+  }),
+});
+
+/**
+ * Si un mensaje del servidor es un error de composición entre fórmulas.
+ *
+ * Esos errores son de la expresión —qué invoca y cómo—, así que se muestran
+ * junto a ella y no al pie del formulario.
+ */
+export const isCompositionError = (message: string): boolean =>
+  /Referencia circular entre fórmulas|espera \d+ argumento|no (es una fórmula activa|son fórmulas activas)|se anidan más de/.test(
+    message,
+  );
+
 export const MATH_FUNCTION_GROUPS: MathFunctionGroup[] = [
   {
     title: "Potencias y raíces",

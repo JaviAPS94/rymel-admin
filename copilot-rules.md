@@ -135,7 +135,7 @@ escriben, se validan y se publican.
 Su contrato vive en otro paquete, con la misma regla que el motor:
 
 ```json
-"@rymel/design-template": "github:JaviAPS94/rymel-design-template#v1.1.0"
+"@rymel/design-template": "github:JaviAPS94/rymel-design-template#v2.1.0"
 ```
 
 **No declares tipos de plantilla en este repositorio ni traduzcas la forma
@@ -162,6 +162,54 @@ diseñadores cargan no cambia hasta publicar de nuevo.
 
 El corte de la biblioteca es reversible desde `project-back` con
 `TEMPLATE_LIBRARY_PUBLISHED_ONLY=false`.
+
+### Qué configura la plantilla y qué es del diseñador
+
+Todo lo que decide **cómo se calcula y qué materiales lleva** un
+transformador es de la plantilla y se configura aquí, con el menú contextual
+de la rejilla o con los paneles: celdas combinadas, paneles inmovilizados,
+notas, etiquetas MO/MD, `goTo`, rangos con nombre, zonas de semielaborado,
+tablas de catálogo, condiciones de catálogo, ítem vinculado y zonas de solo
+lectura. `project-front` no tiene ninguna acción que las escriba.
+
+Al diseñador le quedan dos cosas, y no se mueven aquí:
+
+- **ocultar** celdas, filas o columnas, que es estado de su sesión y el
+  contrato no transporta;
+- **seguir** un «Ir a tabla» ya configurado, que es navegación.
+
+La razón es de datos, no de permisos: un diseño guarda una copia de sus hojas,
+así que lo que el diseñador configuraba se quedaba en ese diseño y no volvía
+nunca a la plantilla. Cuando se movió, de 33 diseños solo 2 —de prueba— tenían
+configuración de BOM, y ninguna plantilla. Si algo tiene que variar de un
+diseño a otro, se resuelve en la plantilla (por ejemplo, con un vínculo
+calculado), no devolviéndole al diseñador la escritura.
+
+Las zonas de solo lectura se cumplen en tres sitios con **una sola regla**,
+`isReadOnly` del contrato: el editor las señala, el diseñador no deja
+escribir en ellas y `project-back` rechaza la actualización de un diseño que
+las altere. La acción de proteger está encendida por omisión; se apaga con
+`VITE_READ_ONLY_ZONES=false` en un despliegue donde el diseñador vaya por
+detrás.
+
+El menú contextual y los paneles escriben por las mismas mutaciones
+(`updateCell`, `setSheetStyles`, `setMaterialTag`) y los mismos formularios
+(`RegionForms.tsx`). Una acción nueva se añade una vez y se ofrece en los dos.
+
+### Lista de materiales de un diseño
+
+Se consulta en `/design-bom` y ya no en el diseñador. Se arma en el navegador
+con `buildBomSummary`, portado de project-front **sin cambiar sus reglas**:
+estructura BOM cuyo código es prefijo de la referencia ERP del elemento,
+semielaborados de hojas a raíz, ítems vinculados dentro de sus zonas y
+accesorios del elemento. `buildBomSummary.spec.ts` lo fija contra la salida
+que daba el cliente; si una regla tiene que cambiar, esa prueba cambia con
+ella y a propósito.
+
+Se edita como una hoja de Excel, igual que en el cliente, con la rejilla y el
+motor del editor de plantillas (`BomSheetEditor`). Como en el cliente, lo
+editado no se guarda con el diseño y desplegar un semielaborado rearma la
+hoja; la exportación a CSV sí lleva lo editado.
 
 ## Deuda conocida
 
@@ -193,6 +241,7 @@ versión mayor del contrato.
 | Variable | Descripción |
 |---|---|
 | `VITE_API_URL` | URL de `project-back`. Por omisión `http://localhost:3000`. |
+| `VITE_READ_ONLY_ZONES` | Zonas de solo lectura, encendidas por omisión. `false` las apaga si el diseñador desplegado aún no las cumple. |
 
 ## Notas Adicionales
 

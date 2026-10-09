@@ -16,6 +16,23 @@ export const bomService = {
     return response.data;
   },
 
+  /**
+   * La estructura cuyo código es prefijo de la referencia ERP de un elemento,
+   * o `null` si no hay ninguna. Es la búsqueda con que se arma la lista de
+   * materiales de un diseño.
+   */
+  async searchByCode(code: string): Promise<BillOfMaterials | null> {
+    try {
+      const response = await apiClient.get<BillOfMaterials>('/bill-of-materials/search', {
+        params: { code },
+      });
+      return response.data;
+    } catch (error) {
+      if ((error as { response?: { status?: number } }).response?.status === 404) return null;
+      throw error;
+    }
+  },
+
   async getBom(id: number): Promise<BillOfMaterials> {
     const response = await apiClient.get<BillOfMaterials>(`/bill-of-materials/${id}`);
     return response.data;

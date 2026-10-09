@@ -3,6 +3,7 @@ import { columnIndexToLabel } from "@rymel/formula-engine";
 import {
   GRID_COLUMNS,
   GRID_ROWS,
+  isReadOnly,
   type TemplateCell,
   type TemplateSheet,
 } from "@rymel/design-template";
@@ -40,11 +41,15 @@ interface Props {
   onResizeColumn: (column: number, width: number) => void;
   onResizeRow: (row: number, height: number) => void;
   onContextMenu?: (ref: string, event: React.MouseEvent) => void;
+  onRowHeaderContextMenu?: (row: number, event: React.MouseEvent) => void;
+  onColumnHeaderContextMenu?: (column: number, event: React.MouseEvent) => void;
   /**
    * Ofrece la celda al modo fórmula antes de seleccionarla. Si la consume, la
    * selección no se mueve: se está señalando una referencia, no navegando.
    */
   onPickCell?: (ref: string) => boolean;
+  /** Si la celda alimenta a la activa o la usa, para resaltarla. */
+  traceOf?: (ref: string) => "precedent" | "dependent" | undefined;
 }
 
 /**
@@ -72,7 +77,10 @@ export const TemplateGrid = ({
   onResizeColumn,
   onResizeRow,
   onContextMenu,
+  onRowHeaderContextMenu,
+  onColumnHeaderContextMenu,
   onPickCell,
+  traceOf,
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ top: 0, left: 0, height: 600, width: 900 });
@@ -304,6 +312,7 @@ export const TemplateGrid = ({
                   : "text-gray-600"
               }`}
               style={{ left: columnOffsets[column], width: columnWidth(column) }}
+              onContextMenu={(event) => onColumnHeaderContextMenu?.(column, event)}
               onClick={() =>
                 selection.selectRange(
                   { row: 0, column },
@@ -339,6 +348,7 @@ export const TemplateGrid = ({
                   : "text-gray-600"
               }`}
               style={{ top: rowOffsets[row], height: rowHeight(row) }}
+              onContextMenu={(event) => onRowHeaderContextMenu?.(row, event)}
               onClick={() =>
                 selection.selectRange(
                   { row, column: 0 },
@@ -423,7 +433,12 @@ export const TemplateGrid = ({
                   onEditingValueChange={onEditingValueChange}
                   onCommitEditing={onCommitEditing}
                   onCancelEditing={onCancelEditing}
+                  readOnly={isReadOnly(sheet.styles, ref)}
+                  trace={traceOf?.(ref)}
                   onMouseDown={(event) => {
+                    // El botón derecho no selecciona: colapsaría la selección
+                    // justo antes de abrir el menú que opera sobre ella.
+                    if (event.button !== 0) return;
                     if (onPickCell?.(ref)) return;
                     selection.select(row, column, event.shiftKey);
                     setDragging(true);
