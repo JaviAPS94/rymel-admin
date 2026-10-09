@@ -1,6 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
 import { IconArrowBackUp } from "@tabler/icons-react";
-import { getColumnByLetter } from "./columns";
 import type { UsePhantomItemGridResult } from "@hooks/usePhantomItemGrid";
 import type { GridSelection } from "./PhantomItemGrid";
 
@@ -47,7 +46,7 @@ interface FormulaBarFieldProps {
 const FormulaBarField = ({ grid, selected, initialFormula }: FormulaBarFieldProps) => {
   const [value, setValue] = useState(initialFormula);
 
-  const column = getColumnByLetter(selected.letter);
+  const column = grid.getColumn(selected.letter);
   const cellRef = `${selected.letter}${selected.row}`;
   const canRestore = column?.defaultFormula && grid.hasOwnFormula(selected.letter, selected.row);
 

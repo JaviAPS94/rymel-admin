@@ -196,6 +196,21 @@ El menú contextual y los paneles escriben por las mismas mutaciones
 (`updateCell`, `setSheetStyles`, `setMaterialTag`) y los mismos formularios
 (`RegionForms.tsx`). Una acción nueva se añade una vez y se ofrece en los dos.
 
+### Lista de materiales de un diseño
+
+Se consulta en `/design-bom` y ya no en el diseñador. Se arma en el navegador
+con `buildBomSummary`, portado de project-front **sin cambiar sus reglas**:
+estructura BOM cuyo código es prefijo de la referencia ERP del elemento,
+semielaborados de hojas a raíz, ítems vinculados dentro de sus zonas y
+accesorios del elemento. `buildBomSummary.spec.ts` lo fija contra la salida
+que daba el cliente; si una regla tiene que cambiar, esa prueba cambia con
+ella y a propósito.
+
+Se edita como una hoja de Excel, igual que en el cliente, con la rejilla y el
+motor del editor de plantillas (`BomSheetEditor`). Como en el cliente, lo
+editado no se guarda con el diseño y desplegar un semielaborado rearma la
+hoja; la exportación a CSV sí lleva lo editado.
+
 ## Deuda conocida
 
 ### Dos rejillas de hoja de cálculo

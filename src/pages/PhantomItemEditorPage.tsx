@@ -1,23 +1,34 @@
-import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
-import { IconArrowLeft, IconAlertTriangle, IconDeviceFloppy } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useParams, useSearch } from "wouter";
+import { IconArrowLeft, IconAlertTriangle, IconDeviceFloppy, IconTrash } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/Card";
+import { Input } from "@components/ui/Input";
+import { Select } from "@components/ui/Select";
 import { Layout } from "@components/Layout";
 import { PhantomItemHeaderForm } from "@components/phantom-item/PhantomItemHeaderForm";
 import { PhantomItemGrid, type GridSelection } from "@components/phantom-item/PhantomItemGrid";
 import { FormulaBar } from "@components/phantom-item/FormulaBar";
-import { COLUMNS, getColumnByLetter } from "@components/phantom-item/columns";
-
-/** Columnas del componente distintas de M: si alguna tiene algo, la fila se quiso usar. */
-const COMPONENT_LETTERS = COLUMNS.filter(
-  (column) => column.scope === "component" && column.letter !== "M",
-).map((column) => column.letter);
+import { getColumnByLetter } from "@components/phantom-item/columns";
+import { buildGridColumns, isCustomKey, ownColumns } from "@components/phantom-item/processColumns";
 import { usePhantomItemGrid, type UsePhantomItemGridResult } from "@hooks/usePhantomItemGrid";
-import { usePhantomItem, useCreatePhantomItem, useUpdatePhantomItem } from "@hooks/usePhantomItems";
+import {
+  usePhantomItem,
+  useCreatePhantomItem,
+  useDeletePhantomItems,
+  useUpdatePhantomItem,
+} from "@hooks/usePhantomItems";
+import { DeletePhantomItemsDialog } from "@components/phantom-item/DeletePhantomItemsDialog";
+import { usePhantomProcesses } from "@hooks/usePhantomProcesses";
 import { useAuthStore } from "@store/authStore";
 import { Role } from "@/types/user.types";
-import type { CreatePhantomItemDto, PhantomItemDetail } from "@/types/phantom-item.types";
+import {
+  ProcessColumnScope,
+  type CreatePhantomItemDto,
+  type ExtraValues,
+  type PhantomItemDetail,
+  type PhantomProcess,
+} from "@/types/phantom-item.types";
 
 const HEADER_FORMULA_LETTERS: Record<string, string> = {
   F: "reference",
@@ -49,7 +60,8 @@ const buildSavePayload = (grid: UsePhantomItemGridResult): CreatePhantomItemDto 
   });
   dto.formulaOverrides = formulaOverrides;
 
-  const componentColumns = COLUMNS.filter((c) => c.scope === "component");
+  const componentColumns = grid.columns.filter((c) => c.scope === "component");
+  const ownLineColumns = componentColumns.filter((c) => isCustomKey(c.field));
 
   dto.components = Array.from({ length: grid.rowCount }, (_, i) => i + 1)
     .map((row) => {
@@ -77,6 +89,12 @@ const buildSavePayload = (grid: UsePhantomItemGridResult): CreatePhantomItemDto 
         wastePercentage: Number(grid.getCell("S", row).computed) || undefined,
         consumptionWarehouse: String(grid.getCell("T", row).computed ?? "") || undefined,
         formulaOverrides: componentFormulaOverrides,
+        extraValues: Object.fromEntries(
+          ownLineColumns.map((column) => [
+            column.field,
+            String(grid.getCell(column.letter, row).computed ?? ""),
+          ]),
+        ),
       };
     })
     .filter((component): component is NonNullable<typeof component> => component !== null);
@@ -97,13 +115,42 @@ const extractValidationErrors = (error: unknown): string[] => {
 
 interface PhantomItemEditorContentProps {
   detail?: PhantomItemDetail;
+  processes: PhantomProcess[];
+  initialProcessId: number;
   onSaved: (id: number) => void;
 }
 
-const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentProps) => {
-  const grid = usePhantomItemGrid(detail);
+const PhantomItemEditorContent = ({
+  detail,
+  processes,
+  initialProcessId,
+  onSaved,
+}: PhantomItemEditorContentProps) => {
+  const [processId, setProcessId] = useState(initialProcessId);
+  const [familyName, setFamilyName] = useState(detail?.familyName ?? "");
+  const [headerExtras, setHeaderExtras] = useState<ExtraValues>(detail?.extraValues ?? {});
+  const [placementDirty, setPlacementDirty] = useState(false);
+
+  const process = processes.find((item) => item.id === processId);
+  const gridColumns = useMemo(() => buildGridColumns(process), [process]);
+  const ownHeaderColumns = ownColumns(process, ProcessColumnScope.HEADER);
+
+  const grid = usePhantomItemGrid(detail, gridColumns);
   const [selected, setSelected] = useState<GridSelection | null>({ letter: "A", row: 1 });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const isDirty = grid.isDirty || placementDirty;
+
+  /** Columnas del componente distintas de M: si alguna tiene algo, la fila se quiso usar. */
+  const componentLetters = grid.columns
+    .filter((column) => column.scope === "component" && column.letter !== "M")
+    .map((column) => column.letter);
+
+  const changeProcess = (value: string) => {
+    setProcessId(Number(value));
+    // A family belongs to its process: it does not follow the phantom item
+    setFamilyName("");
+    setPlacementDirty(true);
+  };
 
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.roles?.includes(Role.ADMIN);
@@ -114,13 +161,13 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
 
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
-      if (!grid.isDirty) return;
+      if (!isDirty) return;
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [grid.isDirty]);
+  }, [isDirty]);
 
   const hasOutOfLimitRows = Array.from({ length: grid.rowCount }, (_, i) => i + 1).some(
     (row) => grid.isOverLimit("G", row) || grid.isOverLimit("I", row) || grid.isOverLimit("K", row),
@@ -141,7 +188,7 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
     (_, i) => i + 1,
   ).filter((row) => {
     if (String(grid.getCell("M", row).computed ?? "").trim() !== "") return false;
-    return COMPONENT_LETTERS.some(
+    return componentLetters.some(
       (letter) => String(grid.getCell(letter, row).computed ?? "").trim() !== "",
     );
   });
@@ -159,16 +206,28 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
       return;
     }
 
-    const payload = buildSavePayload(grid);
+    const family = familyName.trim();
+    const payload: CreatePhantomItemDto = {
+      ...buildSavePayload(grid),
+      processId,
+      // Found or created in the process by name; an empty field clears it
+      ...(family ? { familyName: family } : { familyId: null }),
+      // Only the process's own header columns: another process's do not apply
+      extraValues: Object.fromEntries(
+        ownHeaderColumns.map((column) => [column.key, headerExtras[column.key] ?? ""]),
+      ),
+    };
 
     try {
       if (detail) {
         await updateMutation.mutateAsync({ id: detail.id, data: payload });
         grid.markSaved();
+        setPlacementDirty(false);
         onSaved(detail.id);
       } else {
         const created = await createMutation.mutateAsync(payload);
         grid.markSaved();
+        setPlacementDirty(false);
         onSaved(created.id);
       }
     } catch (error) {
@@ -182,8 +241,66 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
         <CardHeader>
           <CardTitle>Cabecera</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Proceso</label>
+              <Select
+                value={String(processId)}
+                onChange={changeProcess}
+                options={processes.map((item) => ({ value: String(item.id), label: item.name }))}
+                disabled={!isAdmin}
+              />
+            </div>
+            <div>
+              <label htmlFor="phantom-family" className="block text-sm font-medium text-gray-700 mb-1">
+                Familia
+              </label>
+              <Input
+                id="phantom-family"
+                list="phantom-families"
+                placeholder="Sin familia"
+                value={familyName}
+                disabled={!isAdmin}
+                onChange={(event) => {
+                  setFamilyName(event.target.value);
+                  setPlacementDirty(true);
+                }}
+              />
+              <datalist id="phantom-families">
+                {(process?.families ?? []).map((family) => (
+                  <option key={family.id} value={family.name} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
           <PhantomItemHeaderForm grid={grid} />
+
+          {ownHeaderColumns.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 border-t border-gray-100 pt-4">
+              {ownHeaderColumns.map((column) => (
+                <div key={column.key}>
+                  <label
+                    htmlFor={`extra-${column.key}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    {column.header}
+                  </label>
+                  <Input
+                    id={`extra-${column.key}`}
+                    value={headerExtras[column.key] ?? ""}
+                    disabled={!isAdmin}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setHeaderExtras((prev) => ({ ...prev, [column.key]: value }));
+                      setPlacementDirty(true);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -208,7 +325,7 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
       {isAdmin && (
         <div className="flex items-center justify-between">
           <div className="text-sm">
-            {grid.isDirty && <span className="text-amber-600">Cambios sin guardar</span>}
+            {isDirty && <span className="text-amber-600">Cambios sin guardar</span>}
             {hasOutOfLimitRows && (
               <span className="flex items-center gap-1 text-red-600 mt-1">
                 <IconAlertTriangle className="h-4 w-4" />
@@ -229,7 +346,9 @@ const PhantomItemEditorContent = ({ detail, onSaved }: PhantomItemEditorContentP
 export const PhantomItemEditorPage = () => {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
+  const search = useSearch();
   const isNew = id === "new";
+  const { data: processes, isLoading: processesLoading } = usePhantomProcesses();
 
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.roles?.includes(Role.ADMIN);
@@ -239,6 +358,18 @@ export const PhantomItemEditorPage = () => {
   useEffect(() => {
     if (isNew && !isAdmin) navigate("/phantom-items", { replace: true });
   }, [isNew, isAdmin, navigate]);
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const deleteMutation = useDeletePhantomItems();
+  const handleDelete = async () => {
+    if (!detail) return;
+    try {
+      await deleteMutation.mutateAsync([detail.id]);
+    } catch {
+      return;
+    }
+    navigate("/phantom-items", { replace: true });
+  };
 
   const handleBack = () => {
     navigate("/phantom-items");
@@ -261,7 +392,22 @@ export const PhantomItemEditorPage = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             {isNew ? "Nuevo fantasma" : `Fantasma ${detail?.itemCode ?? ""}`}
           </h1>
+          {isAdmin && !isNew && detail && (
+            <Button variant="outline" size="sm" className="ml-auto" onClick={() => setConfirmingDelete(true)}>
+              <IconTrash className="h-4 w-4 mr-2" />
+              Eliminar
+            </Button>
+          )}
         </div>
+
+        {confirmingDelete && detail && (
+          <DeletePhantomItemsDialog
+            itemCodes={[detail.itemCode]}
+            isDeleting={deleteMutation.isPending}
+            onConfirm={handleDelete}
+            onClose={() => setConfirmingDelete(false)}
+          />
+        )}
 
         {!isNew && isLoading && (
           <div className="text-center py-8 text-gray-500">Cargando...</div>
@@ -273,9 +419,26 @@ export const PhantomItemEditorPage = () => {
           </div>
         )}
 
-        {((isNew && isAdmin) || (!isNew && !isLoading && !error && detail)) && (
-          <PhantomItemEditorContent detail={isNew ? undefined : detail} onSaved={handleSaved} />
+        {processesLoading && (
+          <div className="text-center py-8 text-gray-500">Cargando procesos...</div>
         )}
+
+        {processes && processes.length > 0 &&
+          ((isNew && isAdmin) || (!isNew && !isLoading && !error && detail)) && (
+            <PhantomItemEditorContent
+              detail={isNew ? undefined : detail}
+              processes={processes}
+              // An existing item's own process; a new one, the tab it was created from
+              initialProcessId={
+                (!isNew && detail?.processId) ||
+                processes.find(
+                  (item) => item.id === Number(new URLSearchParams(search).get("process")),
+                )?.id ||
+                processes[0].id
+              }
+              onSaved={handleSaved}
+            />
+          )}
       </div>
     </Layout>
   );

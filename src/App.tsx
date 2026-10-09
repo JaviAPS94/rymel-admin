@@ -9,6 +9,7 @@ import { DesignCodeRulesPage } from "@pages/DesignCodeRulesPage";
 import { FormulasPage } from "@pages/FormulasPage";
 import { TemplateListPage } from "@pages/TemplateListPage";
 import { TemplateEditorPage } from "@pages/TemplateEditorPage";
+import { DesignBomPage } from "@pages/DesignBomPage";
 import { PhantomItemListPage } from "@pages/PhantomItemListPage";
 import { PhantomItemEditorPage } from "@pages/PhantomItemEditorPage";
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -58,6 +59,12 @@ const App = () => {
         <Route path="/formulas">
           <ProtectedRoute roles={[Role.ADMIN]}>
             <FormulasPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/design-bom">
+          <ProtectedRoute roles={[Role.ADMIN]}>
+            <DesignBomPage />
           </ProtectedRoute>
         </Route>
 
