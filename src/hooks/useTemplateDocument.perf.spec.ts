@@ -23,7 +23,7 @@ import {
 } from "@rymel/formula-engine";
 import { columnIndexToLabel } from "@rymel/formula-engine";
 import { emptySheetStyles, splitBookRef, type TemplateDocument } from "@rymel/design-template";
-import { traceCell } from "./useCellTrace";
+import { templateCellLookup, traceCell } from "@rymel/design-template";
 
 const RESUMEN_CELLS = 440;
 const TABLAS_CELLS = 1598;
@@ -193,7 +193,7 @@ describe("rastreo de celdas a la escala de la plantilla real", () => {
   it("la cadena completa de la celda que más lee cuesta menos de 50 ms", () => {
     // `C6` consulta `Tablas!B45:C156`: 224 precedentes en su primer nivel.
     const started = performance.now();
-    const trace = traceCell(document, graph, "Resumen", "C6", { full: true });
+    const trace = traceCell(templateCellLookup(document), graph, "Resumen", "C6", { full: true });
     const elapsed = performance.now() - started;
 
     expect(trace.chain![0].length).toBeGreaterThan(200);
@@ -206,7 +206,7 @@ describe("rastreo de celdas a la escala de la plantilla real", () => {
       chainBook[`Hoja!A${row}`] = { formula: `=A${row - 1}+1` };
     }
     const started = performance.now();
-    const trace = traceCell(documentOf(chainBook), buildGraph(chainBook), "Hoja", "A500", {
+    const trace = traceCell(templateCellLookup(documentOf(chainBook)), buildGraph(chainBook), "Hoja", "A500", {
       full: true,
     });
     const elapsed = performance.now() - started;
