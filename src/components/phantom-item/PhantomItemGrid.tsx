@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { cn } from "@utils/cn";
-import { COLUMN_LETTERS, getColumnByLetter } from "./columns";
 import type { UsePhantomItemGridResult } from "@hooks/usePhantomItemGrid";
 
 export interface GridSelection {
@@ -16,9 +15,8 @@ interface PhantomItemGridProps {
   readOnly?: boolean;
 }
 
-const letterIndex = (letter: string): number => COLUMN_LETTERS.indexOf(letter);
-
-const cellsInRange = (a: GridSelection, b: GridSelection): GridSelection[] => {
+const cellsInRange = (letters: string[], a: GridSelection, b: GridSelection): GridSelection[] => {
+  const letterIndex = (letter: string) => letters.indexOf(letter);
   const startCol = Math.min(letterIndex(a.letter), letterIndex(b.letter));
   const endCol = Math.max(letterIndex(a.letter), letterIndex(b.letter));
   const startRow = Math.min(a.row, b.row);
@@ -27,7 +25,7 @@ const cellsInRange = (a: GridSelection, b: GridSelection): GridSelection[] => {
   const cells: GridSelection[] = [];
   for (let row = startRow; row <= endRow; row++) {
     for (let col = startCol; col <= endCol; col++) {
-      cells.push({ letter: COLUMN_LETTERS[col], row });
+      cells.push({ letter: letters[col], row });
     }
   }
   return cells;
@@ -42,10 +40,15 @@ export const PhantomItemGrid = ({ grid, selected, onSelect, readOnly = false }: 
   const isDraggingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // The process's columns: the catalog's A–T, then its own line columns
+  const COLUMN_LETTERS = useMemo(() => grid.columns.map((column) => column.letter), [grid.columns]);
+  const getColumnByLetter = grid.getColumn;
+  const letterIndex = (letter: string): number => COLUMN_LETTERS.indexOf(letter);
+
   const selectionCells = useMemo(() => {
     if (!selected) return [];
-    return cellsInRange(rangeAnchor ?? selected, selected);
-  }, [selected, rangeAnchor]);
+    return cellsInRange(COLUMN_LETTERS, rangeAnchor ?? selected, selected);
+  }, [COLUMN_LETTERS, selected, rangeAnchor]);
 
   const isSelected = (letter: string, row: number) =>
     selectionCells.some((c) => c.letter === letter && c.row === row);
@@ -196,8 +199,10 @@ export const PhantomItemGrid = ({ grid, selected, onSelect, readOnly = false }: 
     const pastedRows = text.replace(/\r/g, "").split("\n").filter((_, i, arr) => !(i === arr.length - 1 && arr[i] === ""));
     const startColIndex = letterIndex(selected.letter);
 
+    // `grid.rowCount` is this render's count and does not grow as rows are
+    // queued: a `while` on it never ended once the paste went past the last row
     const maxRowNeeded = selected.row + pastedRows.length - 1;
-    while (grid.rowCount < maxRowNeeded) {
+    for (let i = grid.rowCount; i < maxRowNeeded; i++) {
       grid.addRow();
     }
 
@@ -235,7 +240,10 @@ export const PhantomItemGrid = ({ grid, selected, onSelect, readOnly = false }: 
                 className="sticky top-0 z-10 bg-gray-100 border border-gray-200 px-2 py-1 font-semibold text-gray-600 min-w-[110px]"
                 title={getColumnByLetter(letter)?.header}
               >
-                {letter}
+                <span className="block">{letter}</span>
+                <span className="block truncate max-w-[200px] text-[11px] font-normal text-gray-500">
+                  {getColumnByLetter(letter)?.header}
+                </span>
               </th>
             ))}
           </tr>

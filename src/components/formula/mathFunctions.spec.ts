@@ -8,7 +8,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { KNOWN_MATH_SYMBOLS, MATH_FUNCTION_GROUPS } from "./mathFunctions";
+import {
+  formulaGroup,
+  isCompositionError,
+  KNOWN_MATH_SYMBOLS,
+  MATH_FUNCTION_GROUPS,
+} from "./mathFunctions";
 
 const entries = MATH_FUNCTION_GROUPS.flatMap((group) => group.entries);
 
@@ -62,5 +67,34 @@ describe("el catálogo de la expresión", () => {
     const log = entries.find((entry) => entry.signature === "log(x)");
     expect(log?.description).toMatch(/natural/);
     expect(entries.some((entry) => entry.signature === "log10(x)")).toBe(true);
+  });
+});
+
+describe("las fórmulas de diseño como grupo", () => {
+  it("se insertan con sus variables como marcadores, en su orden", () => {
+    const group = formulaGroup([
+      { code: "QUADRATIC", name: "Cuadrática", variables: "x" },
+      { code: "RESTA", name: "Resta", variables: "a, b" },
+    ]);
+    expect(group.title).toBe("Fórmulas de diseño");
+    expect(group.entries.map((entry) => entry.insert)).toEqual(["QUADRATIC(x)", "RESTA(a, b)"]);
+    expect(group.entries[0]!.description).toBe("Cuadrática");
+  });
+});
+
+describe("los errores de composición", () => {
+  it.each([
+    "Referencia circular entre fórmulas: A → B → A",
+    "QUADRATIC espera 1 argumento(s) y recibe 2",
+    '"QUADRATICA" no es una fórmula activa de tipo DESIGN',
+    '"A", "B" no son fórmulas activas de tipo DESIGN',
+    "Las fórmulas se anidan más de 5 niveles: A → B → C → D → E → F → G",
+  ])("reconoce «%s»", (message) => {
+    expect(isCompositionError(message)).toBe(true);
+  });
+
+  it("no confunde otros errores", () => {
+    expect(isCompositionError("Símbolo sin declarar: z")).toBe(false);
+    expect(isCompositionError("El código ya lo usa otra fórmula")).toBe(false);
   });
 });

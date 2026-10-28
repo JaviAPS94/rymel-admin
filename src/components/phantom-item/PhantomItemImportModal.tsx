@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { IconAlertTriangle, IconCheck } from "@tabler/icons-react";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { Modal } from "@components/ui/Modal";
 import { Button } from "@components/ui/Button";
 import { Select } from "@components/ui/Select";
 import { useImportPhantomItems } from "@hooks/usePhantomItems";
+import { ImportPreview } from "./ImportPreview";
 import { PhantomItemImportMode, type ImportResult } from "@/types/phantom-item.types";
 
 interface PhantomItemImportModalProps {
@@ -61,11 +62,15 @@ export const PhantomItemImportModal = ({ onClose }: PhantomItemImportModalProps)
     }
   };
 
-  const allIssues = preview ? [...preview.errors, ...preview.warnings] : [];
-
   return (
-    <Modal isOpen={true} onClose={onClose} title="Importar fantasmas" maxWidth="lg">
+    <Modal isOpen={true} onClose={onClose} title="Importar libro de fantasmas" maxWidth="5xl">
       <div className="space-y-5">
+        <p className="text-sm text-gray-500">
+          Cada hoja visible va al proceso del mismo nombre; una hoja sin proceso crea uno nuevo con
+          sus columnas. Puede ser el libro completo o solo las hojas y fantasmas que cambian: en
+          modo «Actualizar» no se toca lo que no viene en el archivo.
+        </p>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Archivo .xlsx
@@ -82,7 +87,10 @@ export const PhantomItemImportModal = ({ onClose }: PhantomItemImportModalProps)
           <label className="block text-sm font-medium text-gray-700 mb-1">Modo</label>
           <Select
             value={mode}
-            onChange={(value) => setMode(value as PhantomItemImportMode)}
+            onChange={(value) => {
+              setMode(value as PhantomItemImportMode);
+              setPreview(null);
+            }}
             options={MODE_OPTIONS}
           />
         </div>
@@ -94,41 +102,7 @@ export const PhantomItemImportModal = ({ onClose }: PhantomItemImportModalProps)
           </div>
         )}
 
-        {preview && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-              <IconCheck className="h-5 w-5 shrink-0" />
-              <span>
-                Se crearían <strong>{preview.created}</strong> y se actualizarían{" "}
-                <strong>{preview.updated}</strong> fantasmas ({preview.rowsRead} filas
-                leídas, {preview.phantomItemsDetected} ítems detectados).
-              </span>
-            </div>
-
-            {allIssues.length > 0 && (
-              <div className="max-h-48 overflow-auto border border-gray-200 rounded-lg">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="text-left py-2 px-3 font-semibold text-gray-700">Fila</th>
-                      <th className="text-left py-2 px-3 font-semibold text-gray-700">Columna</th>
-                      <th className="text-left py-2 px-3 font-semibold text-gray-700">Motivo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allIssues.map((issue, index) => (
-                      <tr key={index} className="border-t border-gray-100">
-                        <td className="py-2 px-3 text-gray-700">{issue.row}</td>
-                        <td className="py-2 px-3 text-gray-500">{issue.column ?? "-"}</td>
-                        <td className="py-2 px-3 text-gray-700">{issue.message}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+        {preview && <ImportPreview result={preview} bySheet />}
 
         <div className="flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1">

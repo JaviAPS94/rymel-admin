@@ -19,8 +19,15 @@ import { SheetTabs } from "@components/template/SheetTabs";
 import { RegionsPanel } from "@components/template/RegionsPanel";
 import { CellBindingsPanel } from "@components/template/CellBindingsPanel";
 import { DiagnosticsPanel } from "@components/template/DiagnosticsPanel";
+import { BomBasePanel } from "@components/template/BomBasePanel";
+import { TracePanel } from "@components/template/TracePanel";
 import { PreviewPanel } from "@components/template/PreviewPanel";
 import { TemplateGrid } from "@components/template/grid/TemplateGrid";
+import {
+  TemplateContextMenu,
+  type MenuTarget,
+} from "@components/template/TemplateContextMenu";
+import { mergeRect, unmergeAt } from "@components/template/sheetStructure";
 import {
   useDiscardDraft,
   useElementFields,
@@ -32,6 +39,7 @@ import { useTemplateValidation } from "@hooks/useTemplateValidation";
 import { useTemplateSave } from "@hooks/useTemplateSave";
 import { useTemplatePreview } from "@hooks/useTemplatePreview";
 import { useFormulaBuilder } from "@hooks/useFormulaBuilder";
+import { useCellTrace, type TraceRef } from "@hooks/useCellTrace";
 import { positionOf, refOf, useGridSelection } from "@hooks/useGridSelection";
 import {
   TemplateStatus,
@@ -39,7 +47,7 @@ import {
   type TemplateDiagnostic,
 } from "@/types/template.types";
 
-type SidePanel = "diagnostics" | "regions" | "bindings" | "preview";
+type SidePanel = "diagnostics" | "regions" | "bindings" | "trace" | "bom" | "preview";
 
 /**
  * Editor de plantillas.
@@ -106,6 +114,8 @@ const Editor = ({ detailId }: { detailId: number }) => {
    */
   const [editing, setEditing] = useState<string | null>(null);
   const [serverDiagnostics, setServerDiagnostics] = useState<TemplateDiagnostic[]>([]);
+  const [menu, setMenu] = useState<MenuTarget | null>(null);
+  const [fullTrace, setFullTrace] = useState(false);
 
   const save = useTemplateSave(
     detail.id,
@@ -146,7 +156,9 @@ const Editor = ({ detailId }: { detailId: number }) => {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "SELECT") return;
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName)) return;
+      // Con el menú contextual abierto, una tecla no empieza a editar la celda.
+      if (menu) return;
 
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
         event.preventDefault();
@@ -201,7 +213,7 @@ const Editor = ({ detailId }: { detailId: number }) => {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selection, sheet, state, save, formula]);
+  }, [selection, sheet, state, save, formula, menu]);
 
   const commitEditing = useCallback(
     (move: "down" | "right" | "none") => {
@@ -266,6 +278,52 @@ const Editor = ({ detailId }: { detailId: number }) => {
   );
 
   const activeCell = sheet?.cells[selection.activeRef];
+
+  const designFunctionCodes = useMemo(
+    () => validation.designFunctionCatalog.map((item) => item.code),
+    [validation.designFunctionCatalog],
+  );
+  const trace = useCellTrace(
+    state.document,
+    state.getGraph,
+    sheet?.name ?? "",
+    selection.activeRef,
+    { full: fullTrace && panel === "trace", designFunctionCodes },
+    state.values,
+  );
+  const traceOf = useCallback(
+    (ref: string): "precedent" | "dependent" | undefined => {
+      if (!sheet || editing !== null) return undefined;
+      const key = `${sheet.name}!${ref}`;
+      if (trace.highlight.precedents.has(key)) return "precedent";
+      if (trace.highlight.dependents.has(key)) return "dependent";
+      return undefined;
+    },
+    [editing, sheet, trace],
+  );
+  const navigateTo = useCallback(
+    ({ sheet: target, ref }: TraceRef) => {
+      state.setActiveSheetName(target);
+      const [start, end = start] = ref.split(":");
+      const from = positionOf(start);
+      const to = positionOf(end);
+      if (from && to) selection.selectRange(from, to);
+    },
+    [selection, state],
+  );
+
+  /**
+   * Lo que vale una celda para el menú: el de la vista previa si se ejecutó
+   * —resuelve las fórmulas de diseño—, y si no el cálculo local.
+   */
+  const valueOf = useCallback(
+    (sheetName: string, ref: string): string => {
+      const key = `${sheetName}!${ref}`;
+      const value = preview.result?.values[key] ?? state.values[key];
+      return value === undefined || value === null ? "" : String(value);
+    },
+    [preview.result, state.values],
+  );
 
   /**
    * Al cambiar de celda, la barra pasa a mostrar su contenido.
@@ -451,27 +509,13 @@ const Editor = ({ detailId }: { detailId: number }) => {
             }}
             onSetStyles={(styles) => state.setSheetStyles(sheet.name, styles)}
             onMerge={() =>
-              state.setSheetStyles(sheet.name, {
-                ...sheet.styles,
-                mergedCells: [
-                  ...sheet.styles.mergedCells,
-                  {
-                    startCell: refOf(selection.rect.top, selection.rect.left),
-                    endCell: refOf(selection.rect.bottom, selection.rect.right),
-                    rowSpan: selection.rect.bottom - selection.rect.top + 1,
-                    colSpan: selection.rect.right - selection.rect.left + 1,
-                  },
-                ],
-              })
+              state.setSheetStyles(sheet.name, mergeRect(sheet.styles, selection.rect))
             }
             onUnmerge={() =>
-              state.setSheetStyles(sheet.name, {
-                ...sheet.styles,
-                mergedCells: sheet.styles.mergedCells.filter(
-                  (merged) =>
-                    merged.startCell !== refOf(selection.rect.top, selection.rect.left),
-                ),
-              })
+              state.setSheetStyles(
+                sheet.name,
+                unmergeAt(sheet.styles, refOf(selection.rect.top, selection.rect.left)),
+              )
             }
           />
         </div>
@@ -545,6 +589,37 @@ const Editor = ({ detailId }: { detailId: number }) => {
                   rowHeights: { ...sheet.styles.rowHeights, [row]: height },
                 })
               }
+              onContextMenu={(ref, event) => {
+                event.preventDefault();
+                // Como en una hoja de cálculo: fuera de la selección, la
+                // selección pasa a la celda; dentro, se conserva.
+                const position = positionOf(ref);
+                if (position && !selection.isSelected(position.row, position.column)) {
+                  selection.select(position.row, position.column);
+                }
+                setMenu({ kind: "cell", ref, x: event.clientX, y: event.clientY });
+              }}
+              onRowHeaderContextMenu={(row, event) => {
+                event.preventDefault();
+                setMenu({ kind: "row", index: row, x: event.clientX, y: event.clientY });
+              }}
+              traceOf={traceOf}
+              onColumnHeaderContextMenu={(column, event) => {
+                event.preventDefault();
+                setMenu({ kind: "column", index: column, x: event.clientX, y: event.clientY });
+              }}
+            />
+
+            <TemplateContextMenu
+              target={menu}
+              onCloseMenu={() => setMenu(null)}
+              document={state.document}
+              sheet={sheet}
+              rect={selection.rect}
+              updateCell={state.updateCell}
+              setSheetStyles={state.setSheetStyles}
+              setMaterialTag={state.setMaterialTag}
+              valueOf={valueOf}
             />
 
             <SheetTabs
@@ -567,6 +642,8 @@ const Editor = ({ detailId }: { detailId: number }) => {
                   ["diagnostics", `Problemas (${validation.diagnostics.length})`],
                   ["regions", "Regiones"],
                   ["bindings", "Celda"],
+                  ["trace", "Rastreo"],
+                  ["bom", "Materiales"],
                   ["preview", "Vista previa"],
                 ] as const
               ).map(([id, label]) => (
@@ -614,11 +691,34 @@ const Editor = ({ detailId }: { detailId: number }) => {
                   sheetName={sheet.name}
                   activeRef={selection.activeRef}
                   cell={activeCell}
-                  sheets={state.document.sheets}
+                  document={state.document}
                   elementFields={elementFields.data ?? []}
+                  valueOf={valueOf}
                   onUpdate={(patch) =>
                     state.updateCell(sheet.name, selection.activeRef, patch)
                   }
+                  onSetMaterialTag={(tag) =>
+                    state.setMaterialTag(sheet.name, selection.activeRef, tag)
+                  }
+                />
+              )}
+
+              {panel === "trace" && (
+                <TracePanel
+                  sheetName={sheet.name}
+                  activeRef={selection.activeRef}
+                  trace={trace}
+                  full={fullTrace}
+                  onToggleFull={setFullTrace}
+                  onNavigate={navigateTo}
+                />
+              )}
+
+              {panel === "bom" && (
+                <BomBasePanel
+                  document={state.document}
+                  onSetBomSheet={state.setBomSheet}
+                  onOpenSheet={state.setActiveSheetName}
                 />
               )}
 

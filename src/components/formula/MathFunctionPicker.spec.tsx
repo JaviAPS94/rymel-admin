@@ -10,6 +10,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MathFunctionPicker } from "./MathFunctionPicker";
+import { formulaGroup } from "./mathFunctions";
 
 const renderPicker = () => {
   const onInsert = vi.fn();
@@ -136,5 +137,43 @@ describe("el buscador de funciones", () => {
     renderPicker();
     expect(screen.getByText("SUMA")).toBeTruthy();
     expect(screen.getByText(/no es el de las plantillas/)).toBeTruthy();
+  });
+});
+
+describe("las fórmulas de diseño en el buscador", () => {
+  const conFormulas = () => {
+    const onInsert = vi.fn();
+    const anchor = window.document.createElement("button");
+    window.document.body.appendChild(anchor);
+    render(
+      <MathFunctionPicker
+        anchor={anchor}
+        onInsert={onInsert}
+        onClose={vi.fn()}
+        extraGroups={[
+          formulaGroup([{ code: "QUADRATIC", name: "Cuadrática", variables: "x" }]),
+        ]}
+      />,
+    );
+    return { onInsert };
+  };
+
+  it("van en un grupo propio, antes de las de mathjs", () => {
+    conFormulas();
+    const titles = [...window.document.querySelectorAll("[data-group-title]")].map(
+      (node) => node.textContent,
+    );
+    expect(titles[0]).toBe("Fórmulas de diseño");
+  });
+
+  it("se buscan por su nombre y se insertan con sus variables", () => {
+    const { onInsert } = conFormulas();
+    fireEvent.change(screen.getByPlaceholderText("Buscar función…"), {
+      target: { value: "cuadrática" },
+    });
+    fireEvent.keyDown(screen.getByPlaceholderText("Buscar función…"), { key: "Enter" });
+    expect(onInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ insert: "QUADRATIC(x)" }),
+    );
   });
 });

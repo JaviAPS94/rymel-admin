@@ -22,6 +22,8 @@ import {
   type CellValueMap,
 } from "@rymel/formula-engine";
 import { columnIndexToLabel } from "@rymel/formula-engine";
+import { emptySheetStyles, splitBookRef, type TemplateDocument } from "@rymel/design-template";
+import { templateCellLookup, traceCell } from "@rymel/design-template";
 
 const RESUMEN_CELLS = 440;
 const TABLAS_CELLS = 1598;
@@ -158,5 +160,58 @@ describe("rendimiento a la escala de la plantilla real", () => {
 
     expect(elapsed).toBeLessThan(50);
     expect(updated["Resumen!C6"]).toBeDefined();
+  });
+});
+
+/** El mismo libro como documento, que es lo que recibe el rastreo. */
+const documentOf = (book: Book): TemplateDocument => {
+  const cells: Record<string, Record<string, { content: string }>> = {};
+  for (const [qualified, cell] of Object.entries(book)) {
+    const { sheet, cell: ref } = splitBookRef(qualified);
+    (cells[sheet!] ??= {})[ref] = { content: cell.formula };
+  }
+  return {
+    name: "P",
+    code: "P",
+    type: "DESIGN",
+    status: "DRAFT",
+    version: 0,
+    sheets: Object.entries(cells).map(([name, sheetCells], position) => ({
+      name,
+      position,
+      cells: sheetCells,
+      styles: emptySheetStyles(),
+    })),
+  };
+};
+
+describe("rastreo de celdas a la escala de la plantilla real", () => {
+  const book = buildRealisticBook();
+  const graph = buildGraph(book);
+  const document = documentOf(book);
+
+  it("la cadena completa de la celda que más lee cuesta menos de 50 ms", () => {
+    // `C6` consulta `Tablas!B45:C156`: 224 precedentes en su primer nivel.
+    const started = performance.now();
+    const trace = traceCell(templateCellLookup(document), graph, "Resumen", "C6", { full: true });
+    const elapsed = performance.now() - started;
+
+    expect(trace.chain![0].length).toBeGreaterThan(200);
+    expect(elapsed).toBeLessThan(50);
+  });
+
+  it("una cadena de 500 niveles no se vuelve cuadrática", () => {
+    const chainBook: Book = { "Hoja!A1": { formula: "1" } };
+    for (let row = 2; row <= 500; row++) {
+      chainBook[`Hoja!A${row}`] = { formula: `=A${row - 1}+1` };
+    }
+    const started = performance.now();
+    const trace = traceCell(templateCellLookup(documentOf(chainBook)), buildGraph(chainBook), "Hoja", "A500", {
+      full: true,
+    });
+    const elapsed = performance.now() - started;
+
+    expect(trace.chain).toHaveLength(499);
+    expect(elapsed).toBeLessThan(100);
   });
 });

@@ -10,6 +10,7 @@ import {
   IconGhost2,
   IconBoxSeam,
   IconUserCog,
+  IconFileDescription,
   IconFileSpreadsheet,
   IconMathFunction,
 } from "@tabler/icons-react";
@@ -47,6 +48,7 @@ export const Navbar = () => {
             label: "Plantillas",
             icon: IconFileSpreadsheet,
           },
+          { path: "/designs", label: "Diseños", icon: IconFileDescription },
         ]
       : []),
     { path: "/settings", label: "Configuración", icon: IconSettings },

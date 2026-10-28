@@ -247,3 +247,56 @@ describe("el catálogo de fórmulas de diseño llega tarde", () => {
     expect(result.current.values["Hoja1!D7"]).toBe("…");
   });
 });
+
+describe("etiqueta de material", () => {
+  const dosHojas = (): TemplateDocument => ({
+    ...document(),
+    sheets: [
+      {
+        name: "Resumen",
+        position: 0,
+        cells: { D3: { content: "5", materialTag: "MO" } },
+        styles: emptySheetStyles(),
+      },
+      { name: "Tablas", position: 1, cells: { B5: { content: "7" } }, styles: emptySheetStyles() },
+    ],
+  });
+
+  const celda = (state: ReturnType<typeof useTemplateDocument>, sheet: string, ref: string) =>
+    writeSheet(state.document.sheets.find((item) => item.name === sheet)!).cells[ref];
+
+  it("reasignarla a otra hoja la quita de la anterior, y deshacer restaura las dos", () => {
+    const { result } = renderHook(() => useTemplateDocument(dosHojas()));
+
+    act(() => result.current.setMaterialTag("Tablas", "B5", "MO"));
+    expect(celda(result.current, "Tablas", "B5")).toEqual({ formula: "7", materialTag: "MO" });
+    expect(celda(result.current, "Resumen", "D3")).toEqual({ formula: "5" });
+
+    act(() => result.current.undo());
+    expect(celda(result.current, "Resumen", "D3")).toEqual({ formula: "5", materialTag: "MO" });
+    expect(celda(result.current, "Tablas", "B5")).toEqual({ formula: "7" });
+  });
+
+  it("marca como sucias las dos hojas, para que el guardado envíe ambas", () => {
+    const { result } = renderHook(() => useTemplateDocument(dosHojas()));
+
+    act(() => result.current.setMaterialTag("Tablas", "B5", "MO"));
+    expect([...result.current.dirtySheets].sort()).toEqual(["Resumen", "Tablas"]);
+  });
+
+  it("MO y MD conviven", () => {
+    const { result } = renderHook(() => useTemplateDocument(dosHojas()));
+
+    act(() => result.current.setMaterialTag("Tablas", "B5", "MD"));
+    expect(celda(result.current, "Resumen", "D3")).toEqual({ formula: "5", materialTag: "MO" });
+    expect(celda(result.current, "Tablas", "B5")).toEqual({ formula: "7", materialTag: "MD" });
+    expect([...result.current.dirtySheets]).toEqual(["Tablas"]);
+  });
+
+  it("quitarla deja la celda sin etiqueta y sin tocar su contenido", () => {
+    const { result } = renderHook(() => useTemplateDocument(dosHojas()));
+
+    act(() => result.current.setMaterialTag("Resumen", "D3", null));
+    expect(celda(result.current, "Resumen", "D3")).toEqual({ formula: "5" });
+  });
+});

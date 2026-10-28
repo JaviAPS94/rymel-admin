@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  IconClipboardList,
   IconChevronLeft,
   IconChevronRight,
   IconPlus,
@@ -127,6 +128,12 @@ export const SheetTabs = ({
                   onDoubleClick={() => startRename(sheet.name)}
                   title="Doble clic para renombrar"
                 >
+                  {sheet.styles.billOfMaterials && (
+                    <IconClipboardList
+                      className="mr-1 inline h-3.5 w-3.5 text-rymel-blue"
+                      aria-label="Lista de materiales"
+                    />
+                  )}
                   {sheet.name}
                   {dirtySheets.has(sheet.name) && (
                     <span className="ml-1 text-amber-600" title="Sin guardar">

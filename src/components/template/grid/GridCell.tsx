@@ -35,6 +35,10 @@ interface Props {
   editingValue: string;
   zone?: SemiFinishedZone;
   isNamedRangeStart: boolean;
+  /** Protegida contra la edición del diseñador. Al autor no le restringe nada. */
+  readOnly?: boolean;
+  /** Si la celda alimenta a la activa o la usa. Solo existe en el editor. */
+  trace?: "precedent" | "dependent";
   /** Si la celda pertenece a una fila o columna inmovilizada. */
   frozen?: "rows" | "columns" | "both";
   onEditingValueChange: (value: string) => void;
@@ -81,6 +85,8 @@ const GridCellComponent = ({
   editingValue,
   zone,
   isNamedRangeStart,
+  readOnly,
+  trace,
   frozen,
   onEditingValueChange,
   onCommitEditing,
@@ -141,6 +147,8 @@ const GridCellComponent = ({
       data-cell={cellRef}
       data-frozen={frozen}
       data-selected={isSelected}
+      data-read-only={readOnly || undefined}
+      data-trace={trace}
       style={{
         ...style,
         backgroundColor: background,
@@ -149,7 +157,11 @@ const GridCellComponent = ({
         ...borders,
         outline: isActive ? "2px solid #2563eb" : undefined,
         outlineOffset: isActive ? "-2px" : undefined,
-        boxShadow: zoneColor ? `inset 0 0 0 1px ${zoneColor.border}` : undefined,
+        boxShadow: trace
+          ? `inset 0 0 0 2px ${trace === "precedent" ? "#10b981" : "#f97316"}`
+          : zoneColor
+            ? `inset 0 0 0 1px ${zoneColor.border}`
+            : undefined,
       }}
       className={`flex items-center overflow-hidden border-b border-r border-gray-200 px-1 text-xs ${
         isError ? "text-red-600" : ""
@@ -194,8 +206,32 @@ const GridCellComponent = ({
                 ⬤
               </span>
             )}
+            {cell?.materialTag && (
+              <span
+                title={
+                  cell.materialTag === "MO"
+                    ? "Material del Núcleo: segmento MO del código de diseño"
+                    : "Material de Devanado: segmento MD del código de diseño"
+                }
+                className="rounded px-0.5 text-[8px] font-bold leading-tight text-white"
+                style={{ backgroundColor: cell.materialTag === "MO" ? "#d97706" : "#db2777" }}
+              >
+                {cell.materialTag}
+              </span>
+            )}
+            {cell?.catalogConditionCells && cell.catalogConditionCells.length > 0 && (
+              <span
+                title={`Enruta al catálogo según ${cell.catalogConditionCells.join(", ")}`}
+                className="text-[9px] text-cyan-600"
+              >
+                ⚙
+              </span>
+            )}
             {cell?.itemLink && (
-              <span title="Enlazada a un ítem del catálogo" className="text-[9px] text-emerald-600">
+              <span
+                title={`Vinculada al ítem ${cell.itemLink.itemId || "(sin elegir)"} del catálogo`}
+                className="text-[9px] text-emerald-600"
+              >
                 ◆
               </span>
             )}
@@ -212,6 +248,11 @@ const GridCellComponent = ({
             {cell?.note && (
               <span title={cell.note} className="text-[9px] text-amber-600">
                 ✎
+              </span>
+            )}
+            {readOnly && (
+              <span title="Solo lectura para el diseñador" className="text-[9px] text-gray-500">
+                🔒︎
               </span>
             )}
             {isNamedRangeStart && (

@@ -4,6 +4,8 @@ import { LoginPage } from "@pages/LoginPage";
 import { DashboardPage } from "@pages/DashboardPage";
 import { UsersPage } from "@pages/UsersPage";
 import { BomListPage } from "@pages/BomListPage";
+import { DesignListPage } from "@pages/DesignListPage";
+import { DesignDetailPage } from "@pages/DesignDetailPage";
 import { BomEditorPage } from "@pages/BomEditorPage";
 import { DesignCodeRulesPage } from "@pages/DesignCodeRulesPage";
 import { FormulasPage } from "@pages/FormulasPage";
@@ -58,6 +60,18 @@ const App = () => {
         <Route path="/formulas">
           <ProtectedRoute roles={[Role.ADMIN]}>
             <FormulasPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/designs">
+          <ProtectedRoute roles={[Role.ADMIN]}>
+            <DesignListPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/designs/:id">
+          <ProtectedRoute roles={[Role.ADMIN]}>
+            <DesignDetailPage />
           </ProtectedRoute>
         </Route>
 

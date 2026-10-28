@@ -135,7 +135,7 @@ escriben, se validan y se publican.
 Su contrato vive en otro paquete, con la misma regla que el motor:
 
 ```json
-"@rymel/design-template": "github:JaviAPS94/rymel-design-template#v1.1.0"
+"@rymel/design-template": "github:JaviAPS94/rymel-design-template#v2.1.0"
 ```
 
 **No declares tipos de plantilla en este repositorio ni traduzcas la forma
@@ -162,6 +162,82 @@ diseñadores cargan no cambia hasta publicar de nuevo.
 
 El corte de la biblioteca es reversible desde `project-back` con
 `TEMPLATE_LIBRARY_PUBLISHED_ONLY=false`.
+
+### Qué configura la plantilla y qué es del diseñador
+
+Todo lo que decide **cómo se calcula y qué materiales lleva** un
+transformador es de la plantilla y se configura aquí, con el menú contextual
+de la rejilla o con los paneles: celdas combinadas, paneles inmovilizados,
+notas, etiquetas MO/MD, `goTo`, rangos con nombre, zonas de semielaborado,
+tablas de catálogo, condiciones de catálogo, ítem vinculado y zonas de solo
+lectura. `project-front` no tiene ninguna acción que las escriba.
+
+Al diseñador le quedan dos cosas, y no se mueven aquí:
+
+- **ocultar** celdas, filas o columnas, que es estado de su sesión y el
+  contrato no transporta;
+- **seguir** un «Ir a tabla» ya configurado, que es navegación.
+
+La razón es de datos, no de permisos: un diseño guarda una copia de sus hojas,
+así que lo que el diseñador configuraba se quedaba en ese diseño y no volvía
+nunca a la plantilla. Cuando se movió, de 33 diseños solo 2 —de prueba— tenían
+configuración de BOM, y ninguna plantilla. Si algo tiene que variar de un
+diseño a otro, se resuelve en la plantilla (por ejemplo, con un vínculo
+calculado), no devolviéndole al diseñador la escritura.
+
+Las zonas de solo lectura se cumplen en tres sitios con **una sola regla**,
+`isReadOnly` del contrato: el editor las señala, el diseñador no deja
+escribir en ellas y `project-back` rechaza la actualización de un diseño que
+las altere. La acción de proteger está encendida por omisión; se apaga con
+`VITE_READ_ONLY_ZONES=false` en un despliegue donde el diseñador vaya por
+detrás.
+
+El menú contextual y los paneles escriben por las mismas mutaciones
+(`updateCell`, `setSheetStyles`, `setMaterialTag`) y los mismos formularios
+(`RegionForms.tsx`). Una acción nueva se añade una vez y se ofrece en los dos.
+
+### Lista de materiales
+
+**La base la define la plantilla.** En el editor de plantillas el admin
+declara las zonas de semielaborado, las tablas de catálogo y los ítems
+vinculados, y en el panel «Materiales» genera con ellos y una estructura BOM
+la hoja «Lista de materiales» (`buildBomBaseSheet`, marca
+`styles.billOfMaterials`). Cantidad, descripción y unidad son **fórmulas** a
+la celda vinculada y al catálogo, no números: cada diseño las calcula con sus
+valores. La hoja se edita y se publica como cualquier otra; regenerarla
+descarta lo editado. El diseño se lleva su copia oculta; el cliente y
+«Diseños» la calculan con `evaluateBomBase` (el `computed` guardado de la
+base no se recalcula al editar otras hojas) y le suman los accesorios con
+`withAccessories`. Las estructuras BOM se administran en `/bom`. La **norma** del
+cliente aporta los accesorios de cada elemento, cada uno con su
+semielaborado. Con una plantilla **sin** base, la estructura se busca por
+prefijo de la referencia ERP del elemento y la lista se arma con
+`buildBomSummaryCells` de **`@rymel/design-template`** (desde v2.3.0), la
+única regla: la usan el diseñador y la sección «Diseños» de aquí. Un cambio
+de regla se hace en la librería, con sus casos (`test/fixtures/bom-cases.json`),
+y los dos repos suben el tag a la vez. El diseñador la ve en solo lectura y,
+con «Editar», añade filas o la ajusta; sus ajustes se guardan con el diseño
+en `design_bom_adjustment`.
+
+El admin no edita ni revisa la lista diseño por diseño: la ve, tal como la ve
+el cliente, en el detalle de un diseño. Hubo una sección `/design-bom` por
+diseño y se retiró el 2026-10-27: partía de un malentendido.
+
+### Diseños
+
+`/designs` lista los diseños del cliente (`POST /admin/designs`, solo ADMIN,
+sin el contenido de las hojas) con filtros por código o nombre, norma, país,
+tipo, subtipo, referencia ERP, fechas, desactualizado y con lista ajustada.
+`/designs/:id` lo muestra todo en **solo lectura**: elementos, hojas de
+diseño y de costos en la rejilla del editor (`ReadOnlySheet`, que no abre la
+edición), versiones de fórmulas (`GET /admin/designs/:id/versions`) y la
+lista de materiales. El admin no recalcula fórmulas en el navegador: muestra
+el `computed` que guardó el diseñador.
+
+Acciones: desactivar (borrado lógico, con confirmación), recalcular
+(`POST /admin/designs/:id/recalculate`, primero `dryRun` y solo después
+aplicar: reescribe números que alguien ya vio) y exportar a Excel (ExcelJS,
+cargado con `import()` para que no pese en el resto del admin).
 
 ## Deuda conocida
 
@@ -193,6 +269,7 @@ versión mayor del contrato.
 | Variable | Descripción |
 |---|---|
 | `VITE_API_URL` | URL de `project-back`. Por omisión `http://localhost:3000`. |
+| `VITE_READ_ONLY_ZONES` | Zonas de solo lectura, encendidas por omisión. `false` las apaga si el diseñador desplegado aún no las cumple. |
 
 ## Notas Adicionales
 

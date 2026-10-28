@@ -22,6 +22,7 @@ import {
   normalizeDecimalComma,
   normalizeDecimalCommas,
   type DecimalCommaCell,
+  type MaterialTag,
   type SheetStyles,
   type TemplateCell,
   type TemplateDocument,
@@ -64,6 +65,12 @@ export interface UseTemplateDocumentResult {
   getCell: (sheetName: string, ref: string) => TemplateCell | undefined;
   getValue: (sheetName: string, ref: string) => FormulaValue;
   isCircular: (sheetName: string, ref: string) => boolean;
+  /**
+   * El grafo de dependencias con el que se recalcula, indexado por referencia
+   * calificada. Para leerlo, no para modificarlo: el rastreo de celdas lo usa
+   * para no tener un segundo analizador que pudiera discrepar del cálculo.
+   */
+  getGraph: () => DepGraph;
 
   setCellContent: (sheetName: string, ref: string, content: string) => void;
   updateCell: (
@@ -72,8 +79,16 @@ export interface UseTemplateDocumentResult {
     patch: Partial<TemplateCell>,
   ) => void;
   setSheetStyles: (sheetName: string, styles: SheetStyles) => void;
+  /**
+   * Pone o quita la etiqueta MO/MD de una celda. Cada etiqueta es exclusiva
+   * en toda la plantilla: ponerla la quita de donde estuviera, en cualquier
+   * hoja, en un solo paso de deshacer.
+   */
+  setMaterialTag: (sheetName: string, ref: string, tag: MaterialTag | null) => void;
 
   addSheet: (name: string) => void;
+  /** Pone o reemplaza la hoja de lista de materiales base. */
+  setBomSheet: (sheet: TemplateSheet) => void;
   removeSheet: (name: string) => void;
   renameSheet: (from: string, to: string) => void;
   reorderSheets: (names: string[]) => void;
@@ -362,6 +377,83 @@ export const useTemplateDocument = (
     [document, markDirty, remember],
   );
 
+  const setMaterialTag = useCallback(
+    (sheetName: string, ref: string, tag: MaterialTag | null) => {
+      const touched = new Set<string>();
+      const withoutTag = (cell: TemplateCell): TemplateCell => {
+        const rest = { ...cell };
+        delete rest.materialTag;
+        return rest;
+      };
+
+      const sheets = document.sheets.map((sheet) => {
+        let cells = sheet.cells;
+        const own = (): Record<string, TemplateCell> =>
+          cells === sheet.cells ? (cells = { ...sheet.cells }) : cells;
+
+        // La etiqueta no puede quedarse en dos sitios: el código de diseño
+        // toma la primera que encuentra.
+        if (tag !== null) {
+          for (const [cellRef, cell] of Object.entries(sheet.cells)) {
+            if (cell.materialTag !== tag) continue;
+            if (sheet.name === sheetName && cellRef === ref) continue;
+            own()[cellRef] = withoutTag(cell);
+            touched.add(sheet.name);
+          }
+        }
+
+        if (sheet.name === sheetName) {
+          const existing = sheet.cells[ref] ?? { content: "" };
+          own()[ref] =
+            tag === null ? withoutTag(existing) : { ...existing, materialTag: tag };
+          touched.add(sheet.name);
+        }
+
+        return cells === sheet.cells ? sheet : { ...sheet, cells };
+      });
+
+      // Una sola instantánea: deshacer tiene que devolver las dos celdas a
+      // la vez, o quedaría la plantilla con dos MO o con ninguna.
+      remember(document);
+      setDocument({ ...document, sheets });
+      touched.forEach(markDirty);
+    },
+    [document, markDirty, remember],
+  );
+
+  /**
+   * Pone la lista de materiales base: reemplaza la que hubiera —conservando
+   * su nombre y su posición, por si el autor la renombró o la movió— o la
+   * añade al final. Un solo paso de deshacer.
+   */
+  const setBomSheet = useCallback(
+    (generated: TemplateSheet) => {
+      const current = document.sheets.find((sheet) => sheet.styles.billOfMaterials !== undefined);
+      let sheets: TemplateSheet[];
+      let name: string;
+      if (current) {
+        name = current.name;
+        sheets = document.sheets.map((sheet) =>
+          sheet === current ? { ...generated, name, position: sheet.position } : sheet,
+        );
+      } else {
+        // Sin pisar una hoja normal que se llame igual
+        name = generated.name;
+        for (let n = 2; document.sheets.some((sheet) => sheet.name === name); n++) {
+          name = `${generated.name} (${n})`;
+        }
+        sheets = [...document.sheets, { ...generated, name, position: document.sheets.length }];
+      }
+      const next = { ...document, sheets };
+      remember(document);
+      setDocument(next);
+      rebuild(next);
+      markDirty(name);
+      setActiveSheetName(name);
+    },
+    [document, markDirty, rebuild, remember],
+  );
+
   const addSheet = useCallback(
     (name: string) => {
       setDocument((previous) => {
@@ -515,6 +607,8 @@ export const useTemplateDocument = (
     [values],
   );
 
+  const getGraph = useCallback(() => graphRef.current, []);
+
   /**
    * Deshacer y rehacer.
    *
@@ -620,10 +714,13 @@ export const useTemplateDocument = (
     getCell,
     getValue,
     isCircular,
+    getGraph,
     setCellContent,
     updateCell,
     setSheetStyles,
+    setMaterialTag,
     addSheet,
+    setBomSheet,
     removeSheet,
     renameSheet,
     reorderSheets,

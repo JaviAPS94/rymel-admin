@@ -3,7 +3,11 @@ import { IconSearch } from "@tabler/icons-react";
 import {
   MATH_FUNCTION_GROUPS,
   type MathFunctionEntry,
+  type MathFunctionGroup,
 } from "@components/formula/mathFunctions";
+
+/** Sin grupos extra, como constante: un `[]` por omisión cambiaría en cada render. */
+const NO_GROUPS: MathFunctionGroup[] = [];
 
 const PANEL_WIDTH = 380;
 const PANEL_MAX_HEIGHT = 360;
@@ -15,6 +19,8 @@ interface Props {
   /** El botón que lo abre: de él salen las coordenadas. */
   anchor: HTMLElement | null;
   onInsert: (entry: MathFunctionEntry) => void;
+  /** Grupos que van antes de las funciones de mathjs: las fórmulas de diseño. */
+  extraGroups?: MathFunctionGroup[];
   onClose: () => void;
 }
 
@@ -38,7 +44,12 @@ interface Row {
  * «log» y quedan dos. Las flechas y `Enter` cierran el ciclo sin soltar el
  * teclado, que es donde están las manos al escribir una fórmula.
  */
-export const MathFunctionPicker = ({ anchor, onInsert, onClose }: Props) => {
+export const MathFunctionPicker = ({
+  anchor,
+  onInsert,
+  onClose,
+  extraGroups = NO_GROUPS,
+}: Props) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState("");
   const [highlighted, setHighlighted] = useState(0);
@@ -101,7 +112,7 @@ export const MathFunctionPicker = ({ anchor, onInsert, onClose }: Props) => {
     const term = search.trim().toLowerCase();
     const result: Row[] = [];
 
-    for (const group of MATH_FUNCTION_GROUPS) {
+    for (const group of [...extraGroups, ...MATH_FUNCTION_GROUPS]) {
       const matches = group.entries.filter(
         (entry) =>
           term === "" ||
@@ -117,7 +128,7 @@ export const MathFunctionPicker = ({ anchor, onInsert, onClose }: Props) => {
     }
 
     return result;
-  }, [search]);
+  }, [search, extraGroups]);
 
   /** Solo lo insertable participa en la navegación con flechas. */
   const selectable = useMemo(
@@ -212,6 +223,7 @@ export const MathFunctionPicker = ({ anchor, onInsert, onClose }: Props) => {
               return (
                 <p
                   key={`g-${row.title}`}
+                  data-group-title
                   className="sticky top-0 bg-white px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400"
                 >
                   {row.title}

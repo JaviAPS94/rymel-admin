@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   buildGraph,
   getRecalcOrder,
@@ -9,7 +9,7 @@ import {
   type CellValueMap,
   type FormulaValue,
 } from "@rymel/formula-engine";
-import { COLUMNS, getColumnByLetter } from "@components/phantom-item/columns";
+import { COLUMNS, type PhantomItemColumnDef } from "@components/phantom-item/columns";
 import type { PhantomItemDetail } from "@/types/phantom-item.types";
 
 /** One grid cell: the raw content the user typed (formula or literal), and its evaluated result. */
@@ -29,6 +29,15 @@ export type CellGrid = Record<string, GridCell>;
 const HEADER_LETTERS = COLUMNS.filter((c) => c.scope === "header").map((c) => c.letter);
 
 const cellRef = (letter: string, row: number): string => `${letter}${row}`;
+
+/** «U12» → 12. Letters can be more than one once a process adds columns */
+const rowOf = (ref: string): number => Number.parseInt(ref.replace(/^[A-Z]+/, ""), 10);
+
+const rowCountOf = (cells: CellGrid): number =>
+  Math.max(...Object.keys(cells).map(rowOf), 1);
+
+/** Own columns of a process (`custom:…`) keep their values in `extraValues` */
+const isOwnColumn = (column: PhantomItemColumnDef): boolean => column.field.startsWith("custom:");
 
 const rawValueToText = (value: string | number | undefined): string =>
   value === undefined || value === null ? "" : String(value);
@@ -85,9 +94,9 @@ export const recalculateCells = (
 };
 
 /** One empty row (header + component blank), with derived columns' default formulas preinserted. */
-export const buildEmptyCells = (): CellGrid => {
+export const buildEmptyCells = (columns: PhantomItemColumnDef[] = COLUMNS): CellGrid => {
   const cells: CellGrid = {};
-  COLUMNS.forEach((column) => {
+  columns.forEach((column) => {
     cells[cellRef(column.letter, 1)] = {
       formula: column.defaultFormula ? column.defaultFormula(1) : "",
       computed: "",
@@ -116,14 +125,17 @@ const translateFieldFormula = (formula: string, row: number): string =>
   });
 
 /** Rebuilds a `CellGrid` from a persisted phantom item's header + components. */
-export const buildCellsFromDetail = (detail: PhantomItemDetail): CellGrid => {
+export const buildCellsFromDetail = (
+  detail: PhantomItemDetail,
+  columns: PhantomItemColumnDef[] = COLUMNS,
+): CellGrid => {
   const cells: CellGrid = {};
   const rowCount = Math.max(detail.components.length, 1);
 
   for (let row = 1; row <= rowCount; row++) {
     const component = detail.components[row - 1];
 
-    COLUMNS.forEach((column) => {
+    columns.forEach((column) => {
       const ref = cellRef(column.letter, row);
       let formula = "";
 
@@ -143,6 +155,8 @@ export const buildCellsFromDetail = (detail: PhantomItemDetail): CellGrid => {
         formula = override
           ? translateFieldFormula(override, row)
           : (column.defaultFormula?.(row) ?? "");
+      } else if (component && isOwnColumn(column)) {
+        formula = component.extraValues?.[column.field] ?? "";
       } else if (component) {
         const override = component.formulaOverrides?.[column.field];
         formula =
@@ -160,6 +174,9 @@ export const buildCellsFromDetail = (detail: PhantomItemDetail): CellGrid => {
 };
 
 export interface UsePhantomItemGridResult {
+  /** The catalog's A–T, under the process's headers, then its own line columns */
+  columns: PhantomItemColumnDef[];
+  getColumn: (letter: string) => PhantomItemColumnDef | undefined;
   rowCount: number;
   cells: CellGrid;
   referenceLengthLimit: number;
@@ -185,11 +202,28 @@ export interface UsePhantomItemGridResult {
  */
 export const usePhantomItemGrid = (
   detail?: PhantomItemDetail,
+  columns: PhantomItemColumnDef[] = COLUMNS,
 ): UsePhantomItemGridResult => {
   const graphRef = useRef<DepGraph>(buildGraph({}));
 
+  // The state updaters below run later than the render that scheduled them:
+  // they read the columns from here, never from a stale closure.
+  const columnsRef = useRef(columns);
+  useLayoutEffect(() => {
+    columnsRef.current = columns;
+  }, [columns]);
+
+  const byLetter = useMemo(
+    () => new Map(columns.map((column) => [column.letter, column])),
+    [columns],
+  );
+  const getColumn = useCallback(
+    (letter: string) => byLetter.get(letter.toUpperCase()),
+    [byLetter],
+  );
+
   const [cells, setCells] = useState<CellGrid>(() => {
-    const initial = detail ? buildCellsFromDetail(detail) : buildEmptyCells();
+    const initial = detail ? buildCellsFromDetail(detail, columns) : buildEmptyCells(columns);
     graphRef.current = buildGraph(initial);
     return recalculateAll(graphRef.current, initial);
   });
@@ -205,14 +239,7 @@ export const usePhantomItemGrid = (
   }, []);
   const markSaved = useCallback(() => setIsDirty(false), []);
 
-  const rowCount = useMemo(
-    () =>
-      Math.max(
-        ...Object.keys(cells).map((ref) => Number.parseInt(ref.slice(1), 10)),
-        1,
-      ),
-    [cells],
-  );
+  const rowCount = useMemo(() => rowCountOf(cells), [cells]);
 
   const getCell = useCallback(
     (letter: string, row: number): GridCell =>
@@ -222,17 +249,17 @@ export const usePhantomItemGrid = (
 
   const hasOwnFormula = useCallback(
     (letter: string, row: number): boolean => {
-      const column = getColumnByLetter(letter);
+      const column = getColumn(letter);
       if (!column?.defaultFormula) return false;
       return getCell(letter, row).formula !== column.defaultFormula(row);
     },
-    [getCell],
+    [getCell, getColumn],
   );
 
   const setCellValue = useCallback((letter: string, row: number, rawValue: string) => {
     setIsDirty(true);
     setCells((prev) => {
-      const column = getColumnByLetter(letter);
+      const column = columnsRef.current.find((item) => item.letter === letter);
       if (!column) return prev;
 
       const next: CellGrid = { ...prev };
@@ -241,10 +268,7 @@ export const usePhantomItemGrid = (
 
       if (isSharedHeader) {
         // Editing a header cell on any row updates every row's header column.
-        const currentRowCount = Math.max(
-          ...Object.keys(prev).map((ref) => Number.parseInt(ref.slice(1), 10)),
-          1,
-        );
+        const currentRowCount = rowCountOf(prev);
         for (let r = 1; r <= currentRowCount; r++) {
           const ref = cellRef(letter, r);
           next[ref] = { ...next[ref], formula: rawValue };
@@ -264,25 +288,21 @@ export const usePhantomItemGrid = (
 
   const restoreDefaultFormula = useCallback(
     (letter: string, row: number) => {
-      const column = getColumnByLetter(letter);
+      const column = getColumn(letter);
       if (!column?.defaultFormula) return;
       setCellValue(letter, row, column.defaultFormula(row));
     },
-    [setCellValue],
+    [setCellValue, getColumn],
   );
 
   const addRow = useCallback(() => {
     setIsDirty(true);
     setCells((prev) => {
-      const currentRowCount = Math.max(
-        ...Object.keys(prev).map((ref) => Number.parseInt(ref.slice(1), 10)),
-        1,
-      );
-      const newRow = currentRowCount + 1;
+      const newRow = rowCountOf(prev) + 1;
       const next: CellGrid = { ...prev };
       const changedRefs: string[] = [];
 
-      COLUMNS.forEach((column) => {
+      columnsRef.current.forEach((column) => {
         const ref = cellRef(column.letter, newRow);
         const formula = HEADER_LETTERS.includes(column.letter)
           ? (prev[cellRef(column.letter, 1)]?.formula ?? "")
@@ -299,10 +319,7 @@ export const usePhantomItemGrid = (
   const removeRow = useCallback((row: number) => {
     setIsDirty(true);
     setCells((prev) => {
-      const currentRowCount = Math.max(
-        ...Object.keys(prev).map((ref) => Number.parseInt(ref.slice(1), 10)),
-        1,
-      );
+      const currentRowCount = rowCountOf(prev);
       if (currentRowCount <= 1) return prev;
 
       const next: CellGrid = {};
@@ -311,7 +328,7 @@ export const usePhantomItemGrid = (
       for (let r = 1; r <= currentRowCount; r++) {
         if (r === row) continue;
 
-        COLUMNS.forEach((column) => {
+        columnsRef.current.forEach((column) => {
           const source = prev[cellRef(column.letter, r)];
           const targetRefKey = cellRef(column.letter, targetRow);
           const isSharedHeader = HEADER_LETTERS.includes(column.letter);
@@ -344,7 +361,7 @@ export const usePhantomItemGrid = (
 
   const isOverLimit = useCallback(
     (letter: string, row: number): boolean => {
-      const column = getColumnByLetter(letter);
+      const column = getColumn(letter);
       if (column?.kind !== "length") return false;
 
       const cell = getCell(letter, row);
@@ -354,7 +371,7 @@ export const usePhantomItemGrid = (
       const limit = column.limit ?? referenceLengthLimit;
       return value > limit;
     },
-    [getCell, referenceLengthLimit],
+    [getCell, getColumn, referenceLengthLimit],
   );
 
   const isCircular = useCallback(
@@ -363,6 +380,8 @@ export const usePhantomItemGrid = (
   );
 
   return {
+    columns,
+    getColumn,
     rowCount,
     cells,
     referenceLengthLimit,

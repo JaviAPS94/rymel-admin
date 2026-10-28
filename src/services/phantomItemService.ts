@@ -13,6 +13,13 @@ import type {
 
 const BASE_PATH = "/phantom-items";
 
+/**
+ * The whole workbook (533 phantom items, 5,121 rows) takes about 13 s to
+ * import against the local database, more than the client's general 10 s:
+ * the screen would report a failure while the server kept writing.
+ */
+export const IMPORT_TIMEOUT_MS = 5 * 60 * 1000;
+
 export const phantomItemService = {
   async getPhantomItems(
     filters: PhantomItemsFilters = {},
@@ -46,6 +53,12 @@ export const phantomItemService = {
 
   async deletePhantomItem(id: number): Promise<void> {
     await apiClient.delete(`${BASE_PATH}/${id}`);
+  },
+
+  /** All or nothing: if one of them no longer exists, none is deleted */
+  async deletePhantomItems(ids: number[]): Promise<{ deleted: number }> {
+    const response = await apiClient.post<{ deleted: number }>(`${BASE_PATH}/bulk-delete`, { ids });
+    return response.data;
   },
 
   async addComponent(
@@ -96,29 +109,53 @@ export const phantomItemService = {
       {
         headers: { "Content-Type": "multipart/form-data" },
         params: { mode, dryRun },
+        timeout: IMPORT_TIMEOUT_MS,
       },
     );
     return response.data;
   },
 
-  /** Downloads the catalog export as `.xlsx`, respecting the active filters and optional id selection. */
+  /**
+   * Rows copied from Excel into one process. Same result as a file import,
+   * and the same preview with `dryRun`.
+   */
+  async importPasted(
+    processId: number,
+    text: string,
+    mode: PhantomItemImportMode,
+    dryRun: boolean,
+  ): Promise<ImportResult> {
+    const response = await apiClient.post<ImportResult>(
+      `${BASE_PATH}/import/paste`,
+      { processId, text, mode, dryRun },
+      { timeout: IMPORT_TIMEOUT_MS },
+    );
+    return response.data;
+  },
+
+  /**
+   * Downloads the workbook: one sheet per process, or only `filters.processId`'s
+   * sheet. Respects the active filters and an optional id selection.
+   */
   async exportPhantomItems(
     filters: PhantomItemsFilters = {},
     ids?: number[],
+    filename = "fantasmas.xlsx",
   ): Promise<void> {
     const response = await apiClient.get(`${BASE_PATH}/export`, {
       params: { ...filters, ids: ids?.join(",") },
       responseType: "blob",
     });
-    downloadBlob(response.data, "phantom-items.xlsx");
+    downloadBlob(response.data, filename);
   },
 
-  /** Downloads the empty import template `.xlsx`. */
-  async downloadTemplate(): Promise<void> {
+  /** Downloads the empty workbook: every process, or only the given one. */
+  async downloadTemplate(processId?: number, filename = "plantilla-fantasmas.xlsx"): Promise<void> {
     const response = await apiClient.get(`${BASE_PATH}/template`, {
+      params: { processId },
       responseType: "blob",
     });
-    downloadBlob(response.data, "phantom-items-template.xlsx");
+    downloadBlob(response.data, filename);
   },
 };
 

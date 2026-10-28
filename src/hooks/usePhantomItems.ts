@@ -39,6 +39,7 @@ export const useCreatePhantomItem = () => {
       phantomItemService.createPhantomItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["phantom-items"] });
+      queryClient.invalidateQueries({ queryKey: ["phantom-processes"] });
       toast.success("Fantasma creado exitosamente");
     },
     onError: () => {
@@ -54,6 +55,7 @@ export const useUpdatePhantomItem = () => {
       phantomItemService.updatePhantomItem(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["phantom-items"] });
+      queryClient.invalidateQueries({ queryKey: ["phantom-processes"] });
       queryClient.invalidateQueries({ queryKey: ["phantom-item", id] });
       toast.success("Fantasma actualizado exitosamente");
     },
@@ -69,10 +71,26 @@ export const useDeletePhantomItem = () => {
     mutationFn: (id: number) => phantomItemService.deletePhantomItem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["phantom-items"] });
+      queryClient.invalidateQueries({ queryKey: ["phantom-processes"] });
       toast.success("Fantasma eliminado exitosamente");
     },
     onError: () => {
       toast.error("Error al eliminar el fantasma");
+    },
+  });
+};
+
+export const useDeletePhantomItems = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: number[]) => phantomItemService.deletePhantomItems(ids),
+    onSuccess: ({ deleted }) => {
+      queryClient.invalidateQueries({ queryKey: ["phantom-items"] });
+      queryClient.invalidateQueries({ queryKey: ["phantom-processes"] });
+      toast.success(deleted === 1 ? "Fantasma eliminado" : `${deleted} fantasmas eliminados`);
+    },
+    onError: () => {
+      toast.error("No se pudieron eliminar los fantasmas: no se eliminó ninguno");
     },
   });
 };
@@ -142,6 +160,7 @@ export const useImportPhantomItems = () => {
     onSuccess: (result) => {
       if (!result.dryRun) {
         queryClient.invalidateQueries({ queryKey: ["phantom-items"] });
+        queryClient.invalidateQueries({ queryKey: ["phantom-processes"] });
         toast.success("Importación completada");
       }
     },
@@ -150,3 +169,28 @@ export const useImportPhantomItems = () => {
     },
   });
 };
+
+export const usePastePhantomItems = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      processId,
+      text,
+      mode,
+      dryRun,
+    }: {
+      processId: number;
+      text: string;
+      mode: PhantomItemImportMode;
+      dryRun: boolean;
+    }) => phantomItemService.importPasted(processId, text, mode, dryRun),
+    onSuccess: (result) => {
+      if (!result.dryRun) {
+        queryClient.invalidateQueries({ queryKey: ["phantom-items"] });
+        queryClient.invalidateQueries({ queryKey: ["phantom-processes"] });
+        toast.success("Filas pegadas e importadas");
+      }
+    },
+  });
+};
+
