@@ -12,12 +12,23 @@ export interface SemiFinished {
   name: string;
 }
 
+/** Una familia de fantasmas colgada de un semielaborado del árbol. */
+export interface BomNodePhantomFamily {
+  id: number;
+  family: { id: number; name: string };
+  process: { id: number; name: string };
+  /** Fantasmas de la familia que ofrece la estructura, según sus Tipos PT. */
+  offered: number;
+}
+
 export interface BomNode {
   id: number;
   semiFinished: SemiFinished;
   type: BomNodeType | null;
   parentId: number | null;
   children: BomNode[];
+  /** Ausente en respuestas de servidores anteriores a las familias. */
+  phantomFamilies?: BomNodePhantomFamily[];
 }
 
 export interface BillOfMaterials {
@@ -25,6 +36,8 @@ export interface BillOfMaterials {
   code: string;
   name: string;
   nodes: BomNode[];
+  /** Tipos PT que soporta la estructura; vacío ofrece todos los fantasmas. */
+  productTypes?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -64,4 +77,19 @@ export interface UpdateBomNodeDto {
   semiFinishedId?: number;
   parentId?: number;
   type?: BomNodeType;
+}
+
+/** Un fantasma que la estructura ofrece de una familia del árbol. */
+export interface OfferedPhantomItem {
+  id: number;
+  itemCode: string;
+  reference: string;
+  finishedProductType: string;
+  componentsCount: number;
+}
+
+/** Un Tipo PT de los fantasmas, con cuántos lo tienen. */
+export interface PhantomProductType {
+  code: string;
+  count: number;
 }

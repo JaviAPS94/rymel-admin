@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
 import {
   IconArrowLeft,
@@ -7,6 +7,8 @@ import {
   IconTrash,
   IconSitemap,
   IconInfoCircle,
+  IconGhost2,
+  IconAlertTriangle,
 } from '@tabler/icons-react';
 import { Button } from '@components/ui/Button';
 import { Modal } from '@components/ui/Modal';
@@ -14,8 +16,16 @@ import { Layout } from '@components/Layout';
 import { BomTree } from '@components/BomTree';
 import { BomNodeFormModal } from '@components/BomNodeFormModal';
 import { BomFormModal } from '@components/BomFormModal';
-import { useBom, useDeleteBomNode } from '@hooks/useBom';
-import { BomNodeType, type BomNode, type BomListItem } from '@/types/bom.types';
+import { BomPhantomFamiliesModal } from '@components/BomPhantomFamiliesModal';
+import { BomPhantomFamilyPanel } from '@components/BomPhantomFamilyPanel';
+import { BomProductTypesModal } from '@components/BomProductTypesModal';
+import { useBom, useDeleteBomNode, useRemoveNodePhantomFamily } from '@hooks/useBom';
+import {
+  BomNodeType,
+  type BomNode,
+  type BomListItem,
+  type BomNodePhantomFamily,
+} from '@/types/bom.types';
 
 const typeLabels: Record<string, string> = {
   [BomNodeType.STANDARD]: 'Estándar',
@@ -36,8 +46,23 @@ export const BomEditorPage = () => {
 
   const { data: bom, isLoading, error } = useBom(bomId);
   const deleteMutation = useDeleteBomNode(bomId);
+  const removeFamilyMutation = useRemoveNodePhantomFamily(bomId);
 
-  const [selectedNode, setSelectedNode] = useState<BomNode | null>(null);
+  // La selección se guarda por id y se busca en el árbol de ahora, para que
+  // los contadores de las familias estén al día tras cada cambio
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [selectedFamilyId, setSelectedFamilyId] = useState<number | null>(null);
+  const [showAddFamiliesModal, setShowAddFamiliesModal] = useState(false);
+  const [showProductTypesModal, setShowProductTypesModal] = useState(false);
+  const [familyToRemove, setFamilyToRemove] = useState<BomNodePhantomFamily | null>(null);
+  const selectedNode = useMemo(
+    () => (bom && selectedNodeId !== null ? findNode(bom.nodes, selectedNodeId) : null),
+    [bom, selectedNodeId],
+  );
+  const selectedFamily = useMemo(
+    () => (bom && selectedFamilyId !== null ? findFamily(bom.nodes, selectedFamilyId) : null),
+    [bom, selectedFamilyId],
+  );
   const [showAddNodeModal, setShowAddNodeModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -46,7 +71,31 @@ export const BomEditorPage = () => {
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set());
 
   const handleNodeClick = (node: BomNode) => {
-    setSelectedNode((prev) => (prev?.id === node.id ? null : node));
+    setSelectedFamilyId(null);
+    setSelectedNodeId((prev) => (prev === node.id ? null : node.id));
+  };
+
+  const handleFamilyClick = (link: BomNodePhantomFamily) => {
+    setSelectedNodeId(null);
+    setSelectedFamilyId((prev) => (prev === link.id ? null : link.id));
+  };
+
+  const handleAddFamilies = () => {
+    if (selectedNode) {
+      setExpandedNodes((prev) => new Set([...prev, selectedNode.id]));
+    }
+    setShowAddFamiliesModal(true);
+  };
+
+  const confirmRemoveFamily = () => {
+    if (familyToRemove) {
+      removeFamilyMutation.mutate(familyToRemove.id, {
+        onSuccess: () => {
+          setSelectedFamilyId(null);
+          setFamilyToRemove(null);
+        },
+      });
+    }
   };
 
   const handleToggleExpand = (nodeId: number) => {
@@ -83,7 +132,7 @@ export const BomEditorPage = () => {
     if (selectedNode) {
       deleteMutation.mutate(selectedNode.id, {
         onSuccess: () => {
-          setSelectedNode(null);
+          setSelectedNodeId(null);
           setShowDeleteConfirm(false);
         },
       });
@@ -121,6 +170,7 @@ export const BomEditorPage = () => {
     createdAt: bom.createdAt,
     updatedAt: bom.updatedAt,
   };
+  const productTypes = bom.productTypes ?? [];
 
   return (
     <Layout>
@@ -147,6 +197,29 @@ export const BomEditorPage = () => {
                 </button>
               </div>
               <p className="text-sm text-gray-500 mt-0.5">{bom.name}</p>
+              <div className="flex items-center gap-1.5 flex-wrap mt-2 text-xs">
+                <span className="font-medium text-gray-500">Tipos de equipo:</span>
+                {productTypes.length === 0 ? (
+                  <span className="flex items-center gap-1 text-amber-700">
+                    <IconAlertTriangle className="h-3.5 w-3.5" />
+                    Sin tipos de equipo: se ofrecen todos los fantasmas
+                  </span>
+                ) : (
+                  productTypes.map((code) => (
+                    <span key={code} className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 text-gray-700 font-medium">
+                      {code}
+                    </span>
+                  ))
+                )}
+                <button
+                  onClick={() => setShowProductTypesModal(true)}
+                  className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                  title="Editar tipos de equipo"
+                  aria-label="Editar tipos de equipo"
+                >
+                  <IconEdit className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -161,6 +234,10 @@ export const BomEditorPage = () => {
             </span>
             <span className="px-2 py-1 bg-blue-100 border border-blue-300 text-blue-900 rounded">
               Referencia
+            </span>
+            <span className="px-2 py-1 bg-violet-50 border-2 border-dashed border-violet-300 text-violet-900 rounded flex items-center gap-1">
+              <IconGhost2 className="h-3 w-3" />
+              Familia de fantasmas
             </span>
           </div>
         </div>
@@ -178,6 +255,8 @@ export const BomEditorPage = () => {
                 onAddRoot={handleAddRoot}
                 expandedNodes={expandedNodes}
                 onToggleExpand={handleToggleExpand}
+                onFamilyClick={handleFamilyClick}
+                selectedFamilyId={selectedFamily?.link.id ?? null}
               />
             </div>
           </div>
@@ -227,6 +306,15 @@ export const BomEditorPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={handleAddFamilies}
+                    className="w-full"
+                  >
+                    <IconGhost2 className="h-4 w-4 mr-1" />
+                    Agregar fantasmas
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleEditNode}
                     className="w-full"
                   >
@@ -242,6 +330,13 @@ export const BomEditorPage = () => {
                   </button>
                 </div>
               </div>
+            ) : selectedFamily ? (
+              <BomPhantomFamilyPanel
+                bomId={bomId}
+                link={selectedFamily.link}
+                parentCode={selectedFamily.parent.semiFinished.code}
+                onRemove={() => setFamilyToRemove(selectedFamily.link)}
+              />
             ) : (
               <div className="bg-gray-50 rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-gray-400">
                 Haz clic en un nodo del árbol para ver sus acciones
@@ -260,6 +355,10 @@ export const BomEditorPage = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Niveles</span>
                 <span className="font-semibold text-gray-800">{treeDepth(bom.nodes)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Familias de fantasmas</span>
+                <span className="font-semibold text-gray-800">{countFamilies(bom.nodes)}</span>
               </div>
             </div>
           </div>
@@ -286,6 +385,46 @@ export const BomEditorPage = () => {
         />
       )}
 
+      {showAddFamiliesModal && selectedNode && (
+        <BomPhantomFamiliesModal
+          bomId={bomId}
+          node={selectedNode}
+          onClose={() => setShowAddFamiliesModal(false)}
+        />
+      )}
+
+      {showProductTypesModal && (
+        <BomProductTypesModal
+          bomId={bomId}
+          current={productTypes}
+          onClose={() => setShowProductTypesModal(false)}
+        />
+      )}
+
+      {familyToRemove && (
+        <Modal isOpen={true} onClose={() => setFamilyToRemove(null)} title="Quitar familia">
+          <div className="space-y-5">
+            <p className="text-gray-600 text-sm">
+              ¿Quitar <strong>{familyToRemove.family.name}</strong> ({familyToRemove.process.name}) del
+              árbol? Los fantasmas no se modifican.
+            </p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setFamilyToRemove(null)} className="flex-1">
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={confirmRemoveFamily}
+                isLoading={removeFamilyMutation.isPending}
+                className="flex-1 bg-red-600 hover:bg-red-700"
+              >
+                Quitar
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {showEditBomModal && (
         <BomFormModal
           bom={bomAsListItem}
@@ -304,6 +443,8 @@ export const BomEditorPage = () => {
               ¿Estás seguro de eliminar el nodo{' '}
               <strong>{selectedNode.semiFinished.code}</strong>? También se
               eliminarán todos sus nodos hijos.
+              {countFamilies([selectedNode]) > 0 &&
+                ` Se quitarán ${countFamilies([selectedNode])} familia(s) de fantasmas.`}
             </p>
             <div className="flex gap-3">
               <Button
@@ -331,6 +472,35 @@ export const BomEditorPage = () => {
 
 function countNodes(nodes: BomNode[]): number {
   return nodes.reduce((acc, n) => acc + 1 + countNodes(n.children ?? []), 0);
+}
+
+function countFamilies(nodes: BomNode[]): number {
+  return nodes.reduce(
+    (acc, n) => acc + (n.phantomFamilies?.length ?? 0) + countFamilies(n.children ?? []),
+    0,
+  );
+}
+
+function findNode(nodes: BomNode[], id: number): BomNode | null {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    const found = findNode(node.children ?? [], id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findFamily(
+  nodes: BomNode[],
+  linkId: number,
+): { link: BomNodePhantomFamily; parent: BomNode } | null {
+  for (const node of nodes) {
+    const link = node.phantomFamilies?.find((l) => l.id === linkId);
+    if (link) return { link, parent: node };
+    const found = findFamily(node.children ?? [], linkId);
+    if (found) return found;
+  }
+  return null;
 }
 
 function treeDepth(nodes: BomNode[]): number {

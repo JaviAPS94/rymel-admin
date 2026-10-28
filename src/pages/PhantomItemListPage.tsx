@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import {
   IconPlus,
   IconGhost2,
@@ -42,9 +42,14 @@ export const PhantomItemListPage = () => {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.roles?.includes(Role.ADMIN);
 
+  // `?process=&family=` abre un proceso con su familia filtrada (desde la estructura BOM)
+  const params = new URLSearchParams(useSearch());
+  const initialFamilyId = Number(params.get("family")) || undefined;
+  const initialProcessId = Number(params.get("process")) || null;
+
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
-  const [filters, setFilters] = useState<PhantomItemsFilters>({});
+  const [filters, setFilters] = useState<PhantomItemsFilters>({ familyId: initialFamilyId });
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [showProcessesModal, setShowProcessesModal] = useState(false);
@@ -52,7 +57,7 @@ export const PhantomItemListPage = () => {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const { data: processes = [], isLoading: processesLoading } = usePhantomProcesses();
-  const [selectedProcessId, setSelectedProcessId] = useState<number | null>(null);
+  const [selectedProcessId, setSelectedProcessId] = useState<number | null>(initialProcessId);
   // The first process until one is chosen, and again if the chosen one is gone
   const process =
     processes.find((item) => item.id === selectedProcessId) ?? processes[0] ?? null;

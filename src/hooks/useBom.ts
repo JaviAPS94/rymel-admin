@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { bomService } from '@services/bomService';
 import { semiFinishedService } from '@services/semiFinishedService';
+import { apiErrorMessage } from '@hooks/usePhantomProcesses';
 import type { CreateBomDto, UpdateBomDto, CreateBomNodeDto, UpdateBomNodeDto } from '@/types/bom.types';
 
 export const useBoms = (page = 1, limit = 10) => {
@@ -111,5 +112,70 @@ export const useDeleteBomNode = (bomId: number) => {
     onError: () => {
       toast.error('Error al eliminar el nodo');
     },
+  });
+};
+
+/** Lo que cambia los fantasmas que ofrece la estructura: el árbol y sus listas. */
+const invalidateBomPhantoms = (queryClient: ReturnType<typeof useQueryClient>, bomId: number) => {
+  queryClient.invalidateQueries({ queryKey: ['bom', bomId] });
+  queryClient.invalidateQueries({ queryKey: ['bom-offered-phantoms', bomId] });
+};
+
+export const usePhantomProductTypes = () => {
+  return useQuery({
+    queryKey: ['phantom-product-types'],
+    queryFn: () => bomService.getPhantomProductTypes(),
+    staleTime: 60 * 1000,
+  });
+};
+
+export const useSetBomProductTypes = (bomId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (codes: string[]) => bomService.setProductTypes(bomId, codes),
+    onSuccess: () => {
+      invalidateBomPhantoms(queryClient, bomId);
+      toast.success('Tipos de equipo actualizados');
+    },
+    onError: (error) => {
+      toast.error(apiErrorMessage(error, 'Error al actualizar los tipos de equipo'));
+    },
+  });
+};
+
+export const useAddNodePhantomFamilies = (bomId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ nodeId, familyIds }: { nodeId: number; familyIds: number[] }) =>
+      bomService.addPhantomFamilies(nodeId, familyIds),
+    onSuccess: (_, { familyIds }) => {
+      invalidateBomPhantoms(queryClient, bomId);
+      toast.success(familyIds.length === 1 ? 'Familia agregada' : `${familyIds.length} familias agregadas`);
+    },
+    onError: (error) => {
+      toast.error(apiErrorMessage(error, 'Error al agregar las familias'));
+    },
+  });
+};
+
+export const useRemoveNodePhantomFamily = (bomId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => bomService.removePhantomFamily(id),
+    onSuccess: () => {
+      invalidateBomPhantoms(queryClient, bomId);
+      toast.success('Familia quitada del árbol');
+    },
+    onError: (error) => {
+      toast.error(apiErrorMessage(error, 'Error al quitar la familia'));
+    },
+  });
+};
+
+export const useOfferedPhantomItems = (bomId: number, familyId: number | null) => {
+  return useQuery({
+    queryKey: ['bom-offered-phantoms', bomId, familyId],
+    queryFn: () => bomService.getOfferedPhantomItems(bomId, familyId as number),
+    enabled: familyId !== null,
   });
 };
