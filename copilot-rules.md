@@ -219,6 +219,16 @@ y los dos repos suben el tag a la vez. El diseñador la ve en solo lectura y,
 con «Editar», añade filas o la ajusta; sus ajustes se guardan con el diseño
 en `design_bom_adjustment`.
 
+**Fantasmas en la estructura.** En `/bom/:id` el semielaborado seleccionado
+tiene «Agregar fantasmas»: cuelga **familias** (no fantasmas sueltos) como
+hojas, en `phantomFamilies` de cada nodo y fuera de `children`, así que
+`buildBomBaseSheet`, `buildBomSummaryCells` y el cliente no las ven. La
+estructura declara sus **Tipos PT** (elegidos de los de los fantasmas, tal
+como están escritos) y cada familia ofrece solo los fantasmas de esos tipos;
+sin tipos, todos. Muestra siempre el proceso junto a la familia: hay nombres
+repetidos entre procesos. Elegir el fantasma concreto en la plantilla o el
+diseño es el siguiente cambio.
+
 El admin no edita ni revisa la lista diseño por diseño: la ve, tal como la ve
 el cliente, en el detalle de un diseño. Hubo una sección `/design-bom` por
 diseño y se retiró el 2026-10-27: partía de un malentendido.
