@@ -45,7 +45,7 @@ Hoy no es así. El editor no tiene ninguna opción de lista de materiales. El cl
 
 ### Modified Capabilities
 
-- `design-bom-summary`: en el cliente, la lista parte de la base de la plantilla cuando la hay, y no de la estructura de la referencia del elemento.
+_Ninguna como delta aparte_: el cambio en el cliente (la lista parte de la base cuando la hay) está escrito en `template-bom-base`, requisito «El diseño parte de la base de la plantilla».
 
 ## Impact
 

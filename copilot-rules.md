@@ -200,9 +200,17 @@ El menú contextual y los paneles escriben por las mismas mutaciones
 
 **La base la define la plantilla.** En el editor de plantillas el admin
 declara las zonas de semielaborado, las tablas de catálogo y los ítems
-vinculados. Las estructuras BOM se administran en `/bom`. La **norma** del
+vinculados, y en el panel «Materiales» genera con ellos y una estructura BOM
+la hoja «Lista de materiales» (`buildBomBaseSheet`, marca
+`styles.billOfMaterials`). Cantidad, descripción y unidad son **fórmulas** a
+la celda vinculada y al catálogo, no números: cada diseño las calcula con sus
+valores. La hoja se edita y se publica como cualquier otra; regenerarla
+descarta lo editado. El diseño se lleva su copia oculta; el cliente y
+«Diseños» la calculan con `evaluateBomBase` (el `computed` guardado de la
+base no se recalcula al editar otras hojas) y le suman los accesorios con
+`withAccessories`. Las estructuras BOM se administran en `/bom`. La **norma** del
 cliente aporta los accesorios de cada elemento, cada uno con su
-semielaborado. Cuando el cliente usa la plantilla, la estructura se busca por
+semielaborado. Con una plantilla **sin** base, la estructura se busca por
 prefijo de la referencia ERP del elemento y la lista se arma con
 `buildBomSummaryCells` de **`@rymel/design-template`** (desde v2.3.0), la
 única regla: la usan el diseñador y la sección «Diseños» de aquí. Un cambio
