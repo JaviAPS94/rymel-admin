@@ -87,6 +87,8 @@ export interface UseTemplateDocumentResult {
   setMaterialTag: (sheetName: string, ref: string, tag: MaterialTag | null) => void;
 
   addSheet: (name: string) => void;
+  /** Pone o reemplaza la hoja de lista de materiales base. */
+  setBomSheet: (sheet: TemplateSheet) => void;
   removeSheet: (name: string) => void;
   renameSheet: (from: string, to: string) => void;
   reorderSheets: (names: string[]) => void;
@@ -419,6 +421,39 @@ export const useTemplateDocument = (
     [document, markDirty, remember],
   );
 
+  /**
+   * Pone la lista de materiales base: reemplaza la que hubiera —conservando
+   * su nombre y su posición, por si el autor la renombró o la movió— o la
+   * añade al final. Un solo paso de deshacer.
+   */
+  const setBomSheet = useCallback(
+    (generated: TemplateSheet) => {
+      const current = document.sheets.find((sheet) => sheet.styles.billOfMaterials !== undefined);
+      let sheets: TemplateSheet[];
+      let name: string;
+      if (current) {
+        name = current.name;
+        sheets = document.sheets.map((sheet) =>
+          sheet === current ? { ...generated, name, position: sheet.position } : sheet,
+        );
+      } else {
+        // Sin pisar una hoja normal que se llame igual
+        name = generated.name;
+        for (let n = 2; document.sheets.some((sheet) => sheet.name === name); n++) {
+          name = `${generated.name} (${n})`;
+        }
+        sheets = [...document.sheets, { ...generated, name, position: document.sheets.length }];
+      }
+      const next = { ...document, sheets };
+      remember(document);
+      setDocument(next);
+      rebuild(next);
+      markDirty(name);
+      setActiveSheetName(name);
+    },
+    [document, markDirty, rebuild, remember],
+  );
+
   const addSheet = useCallback(
     (name: string) => {
       setDocument((previous) => {
@@ -685,6 +720,7 @@ export const useTemplateDocument = (
     setSheetStyles,
     setMaterialTag,
     addSheet,
+    setBomSheet,
     removeSheet,
     renameSheet,
     reorderSheets,

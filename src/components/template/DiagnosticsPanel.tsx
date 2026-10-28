@@ -83,6 +83,7 @@ const CODE_LABEL: Record<string, string> = {
   "missing-condition-cell": "Celda de condición inválida",
   "missing-catalog-item": "Ítem inexistente",
   "duplicate-material-tag": "Etiqueta MO/MD repetida",
+  "duplicate-bom-sheet": "Más de una lista de materiales",
   "read-only-input": "Desplegable protegido",
   "empty-name": "Falta el nombre",
   "graphic-directive": "Directiva de gráfico",

@@ -19,6 +19,7 @@ import { SheetTabs } from "@components/template/SheetTabs";
 import { RegionsPanel } from "@components/template/RegionsPanel";
 import { CellBindingsPanel } from "@components/template/CellBindingsPanel";
 import { DiagnosticsPanel } from "@components/template/DiagnosticsPanel";
+import { BomBasePanel } from "@components/template/BomBasePanel";
 import { TracePanel } from "@components/template/TracePanel";
 import { PreviewPanel } from "@components/template/PreviewPanel";
 import { TemplateGrid } from "@components/template/grid/TemplateGrid";
@@ -46,7 +47,7 @@ import {
   type TemplateDiagnostic,
 } from "@/types/template.types";
 
-type SidePanel = "diagnostics" | "regions" | "bindings" | "trace" | "preview";
+type SidePanel = "diagnostics" | "regions" | "bindings" | "trace" | "bom" | "preview";
 
 /**
  * Editor de plantillas.
@@ -642,6 +643,7 @@ const Editor = ({ detailId }: { detailId: number }) => {
                   ["regions", "Regiones"],
                   ["bindings", "Celda"],
                   ["trace", "Rastreo"],
+                  ["bom", "Materiales"],
                   ["preview", "Vista previa"],
                 ] as const
               ).map(([id, label]) => (
@@ -709,6 +711,14 @@ const Editor = ({ detailId }: { detailId: number }) => {
                   full={fullTrace}
                   onToggleFull={setFullTrace}
                   onNavigate={navigateTo}
+                />
+              )}
+
+              {panel === "bom" && (
+                <BomBasePanel
+                  document={state.document}
+                  onSetBomSheet={state.setBomSheet}
+                  onOpenSheet={state.setActiveSheetName}
                 />
               )}
 
