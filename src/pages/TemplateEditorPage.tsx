@@ -7,6 +7,7 @@ import {
   IconArrowLeft,
   IconDeviceFloppy,
   IconEye,
+  IconHelp,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
@@ -22,6 +23,7 @@ import { DiagnosticsPanel } from "@components/template/DiagnosticsPanel";
 import { BomBasePanel } from "@components/template/BomBasePanel";
 import { TracePanel } from "@components/template/TracePanel";
 import { PreviewPanel } from "@components/template/PreviewPanel";
+import { TemplateGuideModal } from "@components/template/TemplateGuideModal";
 import { TemplateGrid } from "@components/template/grid/TemplateGrid";
 import {
   TemplateContextMenu,
@@ -795,32 +797,42 @@ const Header = ({
   detail: { id: number; version: number; hasDraft: boolean; document: { name: string; code: string } };
   isDirty: boolean;
   onSave: () => void;
-}) => (
-  <div className="flex items-start justify-between">
-    <div>
-      <Link href="/templates">
-        <span className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-rymel-blue">
-          <IconArrowLeft className="h-3.5 w-3.5" />
-          Plantillas
-        </span>
-      </Link>
-      <h1 className="text-xl font-bold text-gray-900">{detail.document.name}</h1>
-      <p className="text-xs text-gray-500">
-        <span className="font-mono">{detail.document.code}</span> · versión{" "}
-        {detail.version}
-        {isDirty && (
-          <span className="ml-2 font-medium text-amber-700">
-            Cambios sin guardar
+}) => {
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  return (
+    <div className="flex items-start justify-between">
+      <div>
+        <Link href="/templates">
+          <span className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-rymel-blue">
+            <IconArrowLeft className="h-3.5 w-3.5" />
+            Plantillas
           </span>
-        )}
-      </p>
-    </div>
+        </Link>
+        <h1 className="text-xl font-bold text-gray-900">{detail.document.name}</h1>
+        <p className="text-xs text-gray-500">
+          <span className="font-mono">{detail.document.code}</span> · versión{" "}
+          {detail.version}
+          {isDirty && (
+            <span className="ml-2 font-medium text-amber-700">
+              Cambios sin guardar
+            </span>
+          )}
+        </p>
+      </div>
 
-    <Button onClick={onSave} disabled={!isDirty}>
-      <IconDeviceFloppy className="mr-1 h-4 w-4" />
-      Guardar
-    </Button>
-  </div>
-);
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={() => setIsGuideOpen(true)}>
+          <IconHelp className="mr-1 h-4 w-4" />
+          Guía
+        </Button>
+        <Button onClick={onSave} disabled={!isDirty}>
+          <IconDeviceFloppy className="mr-1 h-4 w-4" />
+          Guardar
+        </Button>
+      </div>
+      {isGuideOpen && <TemplateGuideModal onClose={() => setIsGuideOpen(false)} />}
+    </div>
+  );
+};
 
 export default TemplateEditorPage;
