@@ -22,5 +22,5 @@
 
 ## 4. Cierre
 
-- [ ] 4.1 A mano: filtrar, abrir el diseño 28, ver sus hojas y su lista, exportarlo
-- [ ] 4.2 `copilot-rules.md`: la sección «Diseños», y que la regla de la lista vive en el paquete
+- [ ] 4.1 A mano: filtrar, abrir el diseño 28, ver sus hojas y su lista, exportarlo. **Pendiente:** necesita sesión en el navegador y reiniciar project-back para que cargue las rutas nuevas
+- [x] 4.2 `copilot-rules.md`: la sección «Diseños», y que la regla de la lista vive en el paquete

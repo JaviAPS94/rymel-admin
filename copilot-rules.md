@@ -203,13 +203,33 @@ declara las zonas de semielaborado, las tablas de catálogo y los ítems
 vinculados. Las estructuras BOM se administran en `/bom`. La **norma** del
 cliente aporta los accesorios de cada elemento, cada uno con su
 semielaborado. Cuando el cliente usa la plantilla, la estructura se busca por
-prefijo de la referencia ERP del elemento y la lista se arma **en
-project-front** (`buildBomSummary`, la única copia). Allí el diseñador la ve
-en solo lectura y, con «Editar», añade filas o la ajusta; sus ajustes se
-guardan con el diseño en `design_bom_adjustment`.
+prefijo de la referencia ERP del elemento y la lista se arma con
+`buildBomSummaryCells` de **`@rymel/design-template`** (desde v2.3.0), la
+única regla: la usan el diseñador y la sección «Diseños» de aquí. Un cambio
+de regla se hace en la librería, con sus casos (`test/fixtures/bom-cases.json`),
+y los dos repos suben el tag a la vez. El diseñador la ve en solo lectura y,
+con «Editar», añade filas o la ajusta; sus ajustes se guardan con el diseño
+en `design_bom_adjustment`.
 
-El admin **no** tiene una vista de la lista por diseño. La hubo
-(`/design-bom`) y se retiró el 2026-10-27: partía de un malentendido.
+El admin no edita ni revisa la lista diseño por diseño: la ve, tal como la ve
+el cliente, en el detalle de un diseño. Hubo una sección `/design-bom` por
+diseño y se retiró el 2026-10-27: partía de un malentendido.
+
+### Diseños
+
+`/designs` lista los diseños del cliente (`POST /admin/designs`, solo ADMIN,
+sin el contenido de las hojas) con filtros por código o nombre, norma, país,
+tipo, subtipo, referencia ERP, fechas, desactualizado y con lista ajustada.
+`/designs/:id` lo muestra todo en **solo lectura**: elementos, hojas de
+diseño y de costos en la rejilla del editor (`ReadOnlySheet`, que no abre la
+edición), versiones de fórmulas (`GET /admin/designs/:id/versions`) y la
+lista de materiales. El admin no recalcula fórmulas en el navegador: muestra
+el `computed` que guardó el diseñador.
+
+Acciones: desactivar (borrado lógico, con confirmación), recalcular
+(`POST /admin/designs/:id/recalculate`, primero `dryRun` y solo después
+aplicar: reescribe números que alguien ya vio) y exportar a Excel (ExcelJS,
+cargado con `import()` para que no pese en el resto del admin).
 
 ## Deuda conocida
 
