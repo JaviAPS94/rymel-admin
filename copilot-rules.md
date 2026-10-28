@@ -222,12 +222,15 @@ en `design_bom_adjustment`.
 **Fantasmas en la estructura.** En `/bom/:id` el semielaborado seleccionado
 tiene «Agregar fantasmas»: cuelga **familias** (no fantasmas sueltos) como
 hojas, en `phantomFamilies` de cada nodo y fuera de `children`, así que
-`buildBomBaseSheet`, `buildBomSummaryCells` y el cliente no las ven. La
+quien solo lee semielaborados no cambia. La
 estructura declara sus **Tipos PT** (elegidos de los de los fantasmas, tal
 como están escritos) y cada familia ofrece solo los fantasmas de esos tipos;
 sin tipos, todos. Muestra siempre el proceso junto a la familia: hay nombres
-repetidos entre procesos. Elegir el fantasma concreto en la plantilla o el
-diseño es el siguiente cambio.
+repetidos entre procesos. En la lista de materiales (base y generada, desde
+`@rymel/design-template` v2.6.0) cada familia es una fila de su sección,
+«Fantasma por elegir»; una base generada antes de colgar la familia hay que
+regenerarla. Elegir el fantasma concreto en la plantilla o el diseño es el
+siguiente cambio.
 
 El admin no edita ni revisa la lista diseño por diseño: la ve, tal como la ve
 el cliente, en el detalle de un diseño. Hubo una sección `/design-bom` por

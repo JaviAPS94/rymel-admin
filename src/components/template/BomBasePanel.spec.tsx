@@ -90,6 +90,29 @@ describe("BomBasePanel", () => {
     expect(Object.values(sheet.cells).some((cell) => cell.content === "=Hoja1!L5")).toBe(true);
   });
 
+  it("incluye las familias de fantasmas que la estructura cuelga del semielaborado", async () => {
+    mocks.getBom.mockResolvedValue({
+      ...STRUCTURE,
+      nodes: [
+        {
+          ...STRUCTURE.nodes[0],
+          phantomFamilies: [{ id: 1, family: { id: 20, name: "F. Acc Sol" }, process: { id: 5, name: "METALMECANICA" }, offered: 184 }],
+        },
+      ],
+    });
+    const onSetBomSheet = renderPanel(doc([HOJA]));
+    await screen.findByRole("option", { name: /1-25-220-120/ });
+    fireEvent.change(screen.getByLabelText("Estructura BOM"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generar lista de materiales" }));
+
+    await waitFor(() => expect(onSetBomSheet).toHaveBeenCalled());
+    const sheet: TemplateSheet = onSetBomSheet.mock.lastCall![0];
+    const [ref] = Object.entries(sheet.cells).find(([, cell]) => cell.content === "F. Acc Sol")!;
+    const row = ref.slice(1);
+    expect(sheet.cells[`C${row}`]?.content).toBe("Fantasma : METALMECANICA");
+    expect(sheet.cells[`I${row}`]?.content).toBe("Fantasma por elegir");
+  });
+
   it("regenerar pide confirmación y, si se cancela, no toca nada", async () => {
     const base = { ...HOJA, name: BOM_BASE_SHEET_NAME, styles: { ...emptySheetStyles(), billOfMaterials: { structureId: 2, structureCode: "1-25-220-120", structureName: "Estructura de prueba" } } };
     const onSetBomSheet = renderPanel(doc([HOJA, base]));

@@ -64,8 +64,23 @@ Al eliminar un nodo de semielaborado SHALL quitarse también las familias que co
 - **THEN** el servidor lo rechaza y nombra la estructura
 
 ### Requirement: El contrato del árbol no cambia para quien no conoce las familias
-El detalle de la estructura SHALL seguir devolviendo cada nodo con `semiFinished`, `type`, `parentId` y `children` como hoy, y añadir `phantomFamilies` aparte. La lista de materiales del cliente, la hoja base de la plantilla y «Diseños» MUST dar el mismo resultado con y sin familias en el árbol.
+El detalle de la estructura SHALL seguir devolviendo cada nodo con `semiFinished`, `type`, `parentId` y `children` como hoy, y añadir `phantomFamilies` aparte.
 
-#### Scenario: Estructura con familias en el cliente
-- **WHEN** el cliente arma la lista de un diseño con una estructura que tiene familias
-- **THEN** la lista es idéntica a la de la misma estructura sin familias
+#### Scenario: Un consumidor que solo lee semielaborados
+- **WHEN** un cliente lee el árbol de una estructura con familias
+- **THEN** cada nodo trae los mismos campos que antes más `phantomFamilies`
+
+### Requirement: Las familias en la lista de materiales
+La lista de materiales SHALL mostrar cada familia de fantasmas como una fila en la sección de su semielaborado, después de los semielaborados hijos y antes de los ítems: la familia en *Item*, «Fantasma : PROCESO» en *Descripción*, 1 UND y «Fantasma por elegir» en *Observación*. SHALL hacerlo igual en la hoja base que se genera en la plantilla, en la lista del cliente con y sin base, y en «Diseños». Los accesorios de la norma MUST seguir al final de la sección.
+
+#### Scenario: Generar la base en la plantilla
+- **WHEN** el administrador genera la lista de materiales con una estructura que tiene «F. Acc Sol» bajo TANQUEPINTADO
+- **THEN** la sección de TANQUEPINTADO tiene la fila «F. Acc Sol · Fantasma : METALMECANICA · 1 · UND · Fantasma por elegir»
+
+#### Scenario: Una base generada antes de agregar la familia
+- **WHEN** la plantilla tiene una base generada antes de colgar la familia
+- **THEN** la base no la tiene hasta que el administrador la regenera
+
+#### Scenario: Cliente sin base
+- **WHEN** el cliente arma la lista de un diseño sin base, con una estructura que tiene familias
+- **THEN** la lista tiene la fila de la familia en la sección de su semielaborado

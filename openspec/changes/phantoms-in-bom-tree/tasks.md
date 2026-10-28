@@ -19,10 +19,15 @@
 
 ## 3. Sin efecto en el resto
 
-- [x] 3.1 `@rymel/design-template`: `buildBomSummaryCells` y `buildBomBaseSheet` con un árbol con `phantomFamilies` dan lo mismo que sin ellas (prueba en el paquete, sin cambiar su código). 146/146, `db63ba1`
+- [x] 3.1 `@rymel/design-template`: sin familias, la hoja base queda igual que antes (sustituido por 4.1: con familias, ahora sí cambia)
 - [x] 3.2 project-front: `check-bom-cases.ts` y `check-bom-base.ts` en verde. Las familias no entran en lo que leen: la equivalencia con y sin familias se prueba en 3.1
 
-## 4. Cierre
+## 4. Las familias en la lista de materiales (añadido tras la revisión)
 
-- [ ] 4.1 A mano en el navegador: tipos de una estructura, agregar familias de dos procesos, ver sus fantasmas, quitar una, eliminar el semielaborado
-- [x] 4.2 `copilot-rules.md` y `docs/03_Especificacion_Funcional_Modulos.md` (módulo 15): familias en el árbol y tipos de la estructura. El repo `docs` queda sin commitear, está en `main`
+- [x] 4.1 Paquete v2.6.0: `bomPhantomFamilyRows`; la fila de cada familia en `buildBomBaseSheet` y `buildBomSummaryCells`, tras los hijos y antes de los ítems; la base calculada sigue igual a la generada; los accesorios siguen al final. 149/149, `06769d9`, tag publicado
+- [x] 4.2 Admin y cliente en v2.6.0. Admin: `BomBasePanel.spec.tsx` con una familia (236/236). Cliente: `check-bom-base.ts` con la familia antes del ítem y el accesorio al final (12/12); `check-bom-cases.ts` y `check-template-load.ts` en verde
+
+## 5. Cierre
+
+- [ ] 5.1 A mano en el navegador: tipos de una estructura, agregar familias de dos procesos, ver sus fantasmas, quitar una, eliminar el semielaborado; regenerar la base de una plantilla y ver la familia en el cliente y en «Diseños»
+- [x] 5.2 `copilot-rules.md` y `docs/03_Especificacion_Funcional_Modulos.md` (módulo 15): familias en el árbol y tipos de la estructura. El repo `docs` queda sin commitear, está en `main`

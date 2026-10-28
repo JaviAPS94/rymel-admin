@@ -29,7 +29,7 @@ Lo que muestran los datos (base local, 2026-10-28):
 **Fuera de alcance**
 
 - Que la plantilla de diseño acote los tipos de la estructura y que el diseño elija el fantasma concreto con sus componentes en la lista de materiales. Es el siguiente cambio y se apoya en este.
-- La lista de materiales del cliente y la hoja base de la plantilla no cambian: siguen leyendo solo los semielaborados del árbol.
+- *(Añadido tras la primera revisión.)* La lista de materiales sí muestra las familias: una fila por familia en la sección de su semielaborado, con «Fantasma por elegir». Es la fila que el siguiente cambio abrirá para elegir el fantasma.
 
 ## Capabilities
 
@@ -46,4 +46,4 @@ Ninguna. Las estructuras BOM y los fantasmas no tienen spec publicada en `opensp
 
 - **project-back**: tablas `bill_of_materials_node_phantom_family` (nodo de semielaborado ↔ familia) y `bill_of_materials_product_type` (estructura ↔ Tipo PT); el detalle de la estructura añade `phantomFamilies` a cada nodo y `productTypes` a la estructura; endpoints para agregar y quitar familias, fijar los tipos, listar los Tipos PT existentes y listar los fantasmas que ofrece una familia en una estructura. Dar de baja un proceso cuyas familias están en una estructura se rechaza.
 - **project-admin**: editor de la estructura (`BomEditorPage`, `BomTree`): acción «Agregar fantasmas» en el semielaborado seleccionado, modal de familias por proceso, nodo de familia en el árbol, panel de la familia con sus fantasmas, editor de Tipos PT en la cabecera y leyenda.
-- **Sin efecto** en `@rymel/design-template`, project-front ni en la hoja base: leen `semiFinished` y `children`, que quedan iguales. Se comprueba en las tareas.
+- **`@rymel/design-template` v2.6.0**: la hoja base y la lista generada añaden la fila de cada familia. project-admin y project-front suben al tag; las bases ya generadas se regeneran para tenerlas.
