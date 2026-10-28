@@ -6,7 +6,7 @@
 - [x] 1.4 `PUT bill-of-materials/:id/product-types { codes }` y `GET phantom-items/product-types` (tipos distintos con su cuenta)
 - [x] 1.5 `GET bill-of-materials/:id/phantom-families/:familyId/items`: fantasmas ofrecidos con código, referencia, Tipo PT y componentes
 - [x] 1.6 `removeNode` da de baja las familias del subárbol; dar de baja un proceso con familias en una estructura se rechaza nombrándola
-- [ ] 1.7 Pruebas del servicio y `check-bom-phantoms.ts` contra la base: agregar, repetir, filtrar por tipos (F. Emblemas con 1CA y 3CATC ofrece 22), sin tipos ofrece todos, cascada, proceso en uso, y que el árbol sin `phantomFamilies` es el mismo que antes. **Pendiente de correr:** requiere la migración `1788800000000`. Hecho: prueba de `PhantomProcessService` para el proceso en uso (jest, 147/147)
+- [x] 1.7 Pruebas del servicio y `check-bom-phantoms.ts` contra la base: agregar, repetir, filtrar por tipos (F. Emblemas con 1CA y 3CATC ofrece 22), sin tipos ofrece todos, cascada, proceso en uso, y que el árbol sin `phantomFamilies` es el mismo que antes. `check-bom-phantoms.ts`: 22/22 contra la base, que queda como estaba. Y la prueba de `PhantomProcessService` para el proceso en uso (jest, 147/147)
 
 ## 2. Admin (project-admin)
 
