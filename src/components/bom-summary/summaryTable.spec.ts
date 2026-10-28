@@ -9,6 +9,8 @@ const cells = {
   D2: { value: "18" },
   E2: { value: "kg" },
   B4: { value: "AC-1" },
+  F4: { value: "06010504" },
+  I4: { value: "sin cantidad en la norma" },
 };
 
 describe("summaryRows", () => {
@@ -24,11 +26,17 @@ describe("toCsv", () => {
 
   it("empieza con BOM UTF-8 y lleva encabezado de columnas con `;`", () => {
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    expect(csv.slice(1).split("\r\n")[0]).toBe("ID;Ítem;Descripción;Cantidad;U.M.");
+    expect(csv.slice(1).split("\r\n")[0]).toBe(
+      "ID;Ítem;Descripción;Cantidad;U.M.;Referencia;Costo promedio;Último costo;Observación",
+    );
   });
 
   it("entrecomilla lo que trae `;` o comillas", () => {
-    expect(csv).toContain(';AL-001;"Platina ""3 mm""; recocida";18;kg');
+    expect(csv).toContain(';AL-001;"Platina ""3 mm""; recocida";18;kg;;;;');
+  });
+
+  it("lleva los campos del accesorio y lo que le falta", () => {
+    expect(csv).toContain(";AC-1;;;;06010504;;;sin cantidad en la norma");
   });
 
   it("una fila por fila de la lista, vacías incluidas", () => {

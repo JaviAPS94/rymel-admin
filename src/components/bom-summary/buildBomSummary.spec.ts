@@ -5,7 +5,9 @@
  * antes de retirarlo, sobre los dos diseños reales con configuración de BOM
  * (`sub_design` 90 y 91): con los semielaborados hijos plegados y
  * desplegados, accesorios del elemento, un ítem que ya no existe y un
- * catálogo borrado. Si esta prueba falla, la lista dejó de ser la que veía el
+ * catálogo borrado; y un caso de accesorios de la norma (completo con costos,
+ * sin cantidad ni unidad, y con la unidad en `unitMeasurement`). Se regenera
+ * con `check-bom-parity.ts --write` en project-front. Si esta prueba falla, la lista dejó de ser la que veía el
  * diseñador.
  */
 
@@ -35,6 +37,8 @@ describe("paridad con el cliente", () => {
     expect(all).toContain("(catálogo borrado)");
     expect(all).toContain("Pasatapas");
     expect(all).toContain("▼");
+    expect(all).toContain("sin cantidad en la norma");
+    expect(all).toContain("29552.27");
   });
 });
 

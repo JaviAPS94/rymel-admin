@@ -54,6 +54,8 @@ export interface Accessory {
   description: string;
   unitMeasurement?: string;
   unitOfMeasurement?: string;
+  averageCost?: number;
+  lastCost?: number;
   value?: number;
   semiFinished?: { id: number; name?: string };
 }
