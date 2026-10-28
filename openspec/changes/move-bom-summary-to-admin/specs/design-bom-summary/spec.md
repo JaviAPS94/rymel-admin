@@ -66,14 +66,23 @@ Si el elemento no tiene referencia ERP, si ninguna estructura coincide, o si los
 - **WHEN** se elige un diseño cuya referencia ERP no empieza por el código de ninguna estructura BOM
 - **THEN** se informa que no hay estructura BOM para esa referencia
 
-### Requirement: El cliente ya no genera la lista
+### Requirement: El cliente conserva la lista
 
-`project-front` SHALL dejar de ofrecer la pestaña «LISTA DE MATERIALES» y su código, la consulta de estructuras BOM y el videotutorial que enseñaba a generarla.
+`project-front` SHALL seguir ofreciendo la pestaña «LISTA DE MATERIALES», con su consulta de estructuras BOM y su videotutorial, tal como estaban antes de este change. Se planteó retirarla; el 2026-10-27 se pidió traerla de vuelta.
 
 #### Scenario: Pestañas del diseñador
 
-- **WHEN** un diseñador abre un diseño
-- **THEN** no aparece la pestaña de lista de materiales
+- **WHEN** un diseñador abre un diseño con elemento
+- **THEN** aparece la pestaña de lista de materiales y la genera como antes
+
+### Requirement: Las dos listas coinciden
+
+Mientras la lista se arme en el cliente y en el admin, las dos copias de `buildBomSummary` SHALL producir la misma salida para los mismos datos. Un cambio de regla SHALL hacerse en las dos a la vez.
+
+#### Scenario: Mismo diseño en los dos lados
+
+- **WHEN** se arma la lista de los `sub_design` 90 y 91 en el cliente (`check-design-bom.ts`) y en el admin (`buildBomSummary.spec.ts`)
+- **THEN** las dos coinciden con la misma línea base
 
 ### Requirement: Listado de diseños sin país obligatorio
 

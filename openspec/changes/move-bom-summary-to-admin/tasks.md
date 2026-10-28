@@ -24,6 +24,12 @@
 - [x] 4.2 Retirar el videotutorial de BOM; era el único, así que la sección «Videotutoriales» de las instrucciones sale entera. También sale `onCellClick` de `SpreadSheet`, que solo usaba la pestaña
 - [x] 4.3 Sale `check-design-bom.ts` del cliente con sus volcados —su línea base la sustituye la prueba de paridad del admin— y `check-roundtrip.ts` deja de armar la lista; sus otras comprobaciones y `check-read-only.ts` y `check-template-load.ts` siguen en verde. 51 errores de compilación, los mismos de antes
 
+## 4b. Vuelta al cliente (2026-10-27)
+
+- [x] 4b.1 Revertido `1c43522` en `project-front`: vuelven la pestaña, `BomSummaryTab`, `buildBomSummary`, `billOfMaterialsApi`, el videotutorial, `onCellClick` de `SpreadSheet`, `check-design-bom.ts` con sus volcados y la comprobación del resumen BOM en `check-roundtrip.ts`
+- [x] 4b.2 `check-design-bom.ts` igual que la línea base (90, 91 y `TEMPLATE_1F_0001`) y `check-template-load.ts` en verde; 51 errores de compilación, los mismos de antes
+- [ ] 4b.3 Abrir a mano el diseño 28 en el diseñador y ver su lista con la estructura `1-25-220-120`
+
 ## 5. Cierre
 
 - [x] 5.1 `dump-design-bom-input.ts` (back) vuelca la respuesta real de `GET /design/by-id/28` y de la búsqueda de BOM, y `scripts/check-design-bom.ts` (admin) arma con ella la lista: 6/6, incluido `240 · Fibra de 2 mm · 3 · KLS` en el CSV

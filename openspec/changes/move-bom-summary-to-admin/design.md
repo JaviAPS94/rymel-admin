@@ -6,7 +6,7 @@ El admin ya administra las estructuras BOM (`BomListPage`, `BomEditorPage`) pero
 
 ## Goals / Non-Goals
 
-**Goals:** la misma lista que hoy ve el diseñador, para cualquier diseño guardado, desde el admin, editable como en el cliente; exportable; y retirada del cliente.
+**Goals:** la misma lista que hoy ve el diseñador, para cualquier diseño guardado, desde el admin, editable como en el cliente; exportable; y sin quitársela al cliente (se retiró y se pidió de vuelta el 2026-10-27).
 
 **Non-Goals:** guardar la lista editada, armarla en el servidor, o completar las estructuras BOM que faltan.
 
@@ -52,7 +52,7 @@ Sin país, `findAllPaginated` comparaba `country.id = NULL` y no devolvía nada.
 
 ## Risks / Trade-offs
 
-- **[Trade-off] Dos copias de la regla** durante la transición. → No hay transición: el cliente pierde la suya en este mismo change. Queda una sola, en el admin.
+- **[Trade-off] Dos copias de la regla.** Al volver la pestaña al cliente, `buildBomSummary` vive en `project-front` y en `project-admin`, y pueden divergir. → Las dos se comprueban contra la misma línea base (`check-design-bom.ts` en el cliente, `buildBomSummary.spec.ts` en el admin), y un cambio de regla toca las dos. Si la divergencia empieza a costar, la salida es la descartada en la decisión 1: armarla en el servidor.
 - **[Riesgo] Una lista distinta de la que daba el cliente.** → Prueba de paridad con datos reales, celda a celda.
 - **[Riesgo] El diseñador pierde una vista que usaba.** → Medido: solo 2 de 21 diseños pueden generarla hoy, y son de prueba. Pedido explícito del responsable del producto.
 
@@ -60,6 +60,6 @@ Sin país, `findAllPaginated` comparaba `country.id = NULL` y no devolvía nada.
 
 1. `project-back`: filtro de país opcional.
 2. `project-admin`: sección nueva.
-3. `project-front`: retirada de la pestaña.
+3. ~~`project-front`: retirada de la pestaña.~~ Revertida el 2026-10-27: la pestaña se queda.
 
 Rollback: cada repo se revierte con su commit; no hay datos.

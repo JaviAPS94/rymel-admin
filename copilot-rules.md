@@ -198,18 +198,28 @@ El menú contextual y los paneles escriben por las mismas mutaciones
 
 ### Lista de materiales de un diseño
 
-Se consulta en `/design-bom` y ya no en el diseñador. Se arma en el navegador
-con `buildBomSummary`, portado de project-front **sin cambiar sus reglas**:
+Se consulta en `/design-bom` y también en la pestaña del diseñador, en
+project-front. Se arma en el navegador con `buildBomSummary`, portado de
+project-front **sin cambiar sus reglas**, y la copia del cliente sigue viva:
+un cambio de regla se hace en los dos repositorios a la vez. La regla:
 estructura BOM cuyo código es prefijo de la referencia ERP del elemento,
 semielaborados de hojas a raíz, ítems vinculados dentro de sus zonas y
 accesorios del elemento. `buildBomSummary.spec.ts` lo fija contra la salida
 que daba el cliente; si una regla tiene que cambiar, esa prueba cambia con
-ella y a propósito.
+ella y a propósito. En project-front, `scripts/check-bom-parity.ts` pasa los
+mismos casos por la copia del cliente.
 
-Se edita como una hoja de Excel, igual que en el cliente, con la rejilla y el
-motor del editor de plantillas (`BomSheetEditor`). Como en el cliente, lo
-editado no se guarda con el diseño y desplegar un semielaborado rearma la
-hoja; la exportación a CSV sí lleva lo editado.
+**Reparto:** el admin define de qué está hecha la lista (estructuras BOM y
+configuración de la plantilla). El diseñador la ve en solo lectura y, con
+«Editar», la ajusta. Sus ajustes se guardan con el diseño en
+`design_bom_adjustment` (`/design/:id/bom-adjustment`), no en `sub_design`.
+Al abrirlos, el cliente compara la huella de la lista generada y avisa si
+cambió. Nada de lo que ajusta el diseñador cambia la estructura.
+
+En el admin se edita como una hoja de Excel, con la rejilla y el motor del
+editor de plantillas (`BomSheetEditor`). Ahí lo editado no se guarda y
+desplegar un semielaborado rearma la hoja; la exportación a CSV sí lleva lo
+editado. El admin todavía no ve los ajustes del diseñador.
 
 ## Deuda conocida
 

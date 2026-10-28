@@ -1,6 +1,6 @@
 ## Why
 
-La pestaña «LISTA DE MATERIALES» del diseñador (`project-front`, `BomSummaryTab`) es lo último de la lista de materiales que sigue en el cliente. El change `move-template-authoring-to-admin` llevó al admin toda la **configuración** del BOM —tablas de catálogo, zonas de semielaborado, condiciones e ítem vinculado—, pero dejó en el cliente el **resultado**: el desglose de materiales de cada diseño. El responsable del producto pidió, el 2026-10-08, que también se administre desde el admin y se retire del cliente.
+La pestaña «LISTA DE MATERIALES» del diseñador (`project-front`, `BomSummaryTab`) es lo último de la lista de materiales que sigue en el cliente. El change `move-template-authoring-to-admin` llevó al admin toda la **configuración** del BOM —tablas de catálogo, zonas de semielaborado, condiciones e ítem vinculado—, pero dejó en el cliente el **resultado**: el desglose de materiales de cada diseño. El responsable del producto pidió, el 2026-10-08, que también se administre desde el admin y se retire del cliente. El 2026-10-27 se pidió traer la pestaña de vuelta al cliente: la lista queda en los dos lados.
 
 Lo que hace hoy la pestaña, leído del código:
 
@@ -22,10 +22,11 @@ Medido en la base `project` el 2026-10-08:
 - **Una hoja que se edita como Excel**, igual que en el cliente: valores, fórmulas, formato y deshacer. Como en el cliente, lo editado no se guarda con el diseño, y desplegar un semielaborado rearma la hoja. Se exporta a CSV con lo editado. (Primero se planteó de solo lectura; el responsable del producto pidió el 2026-10-08 mantener el comportamiento del cliente.)
 - Los casos que hoy fallan dicen por qué: elemento sin referencia ERP, ninguna estructura que coincida, o datos del diseño que no permiten armarla.
 
-**Cliente: se retira la pestaña**
+**Cliente: la pestaña se queda**
 
-- Se quitan la pestaña, `BomSummaryTab`, `buildBomSummary`, la API `billOfMaterialsApi` —que solo usaba la pestaña— y el videotutorial de BOM, que enseñaba a generar la lista desde la pestaña.
+- Primero se retiraron la pestaña, `BomSummaryTab`, `buildBomSummary`, la API `billOfMaterialsApi` y el videotutorial de BOM. El 2026-10-27 se pidió traerlos de vuelta, y se restauraron tal como estaban.
 - El diseñador sigue viendo en su hoja las marcas de la configuración (zonas, ítems vinculados), que vienen de la plantilla.
+- Consecuencia: `buildBomSummary` vive en dos sitios. Las dos copias se fijan contra la misma línea base.
 
 **Servidor: listado de diseños sin país obligatorio**
 
@@ -41,7 +42,7 @@ Medido en la base `project` el 2026-10-08:
 
 ### New Capabilities
 
-- `design-bom-summary`: la lista de materiales de un diseño, consultada y exportada desde el admin, con las reglas de armado que hoy aplica el cliente, y su retirada del cliente.
+- `design-bom-summary`: la lista de materiales de un diseño, consultada y exportada desde el admin, con las reglas de armado que aplica el cliente, que la conserva.
 
 ### Modified Capabilities
 
@@ -50,6 +51,6 @@ _Ninguna._ La pestaña del cliente no estaba especificada.
 ## Impact
 
 - **`project-admin`**: página `DesignBomPage` con ruta `/design-bom` (solo ADMIN) y entrada en el menú; servicio de diseños; búsqueda de BOM por código en `bomService`; `buildBomSummary` portado con su prueba de paridad contra la salida del cliente; exportación CSV.
-- **`project-front`**: se retiran la pestaña y su código, la API de BOM y el videotutorial. Los scripts que usaban `buildBomSummary` dejan de hacerlo.
+- **`project-front`**: la pestaña, su código, la API de BOM, el videotutorial y los scripts que usaban `buildBomSummary` se retiraron y se restauraron (revertido el commit `1c43522`). Sin cambio neto.
 - **`project-back`**: el filtro de país del listado de diseños pasa a ser opcional.
 - **Datos**: ninguno.
