@@ -1,6 +1,6 @@
 ## Why
 
-El change `move-bom-summary-to-admin` sacó la lista de materiales del diseñador (`project-front`) y la dejó solo en el admin. El 2026-10-27 se pidió traerla de vuelta al cliente, sin quitarla del admin, con un reparto claro:
+El change `move-bom-summary-to-admin` sacó la lista de materiales del diseñador (`project-front`) y la llevó a una sección del admin por diseño. El 2026-10-27 se pidió traerla de vuelta al cliente, con un reparto claro (la sección del admin por diseño se retiró después, por la misma razón):
 
 - **El admin define** de qué está hecha la lista: las estructuras BOM (`BomListPage`, `BomEditorPage`) y la configuración de la plantilla (zonas de semielaborado, tablas de catálogo, ítems vinculados). Eso ya es así desde `move-template-authoring-to-admin`.
 - **El cliente consulta** la lista de su diseño y, en casos puntuales, la **ajusta**. Esos ajustes se **guardan con el diseño**.
@@ -24,11 +24,11 @@ La pestaña ya se restauró revirtiendo el commit `1c43522` de `project-front` (
 
 **Admin: sin cambios de comportamiento**
 
-- `/design-bom` sigue armando y exportando la lista sin guardar. La estructura y la configuración se siguen definiendo donde se definen hoy.
+- La base se sigue definiendo en la plantilla y en las estructuras BOM. No hay vista de la lista por diseño en el admin: se retiró el 2026-10-27 (ver `bom-accessory-fields`).
 
 **Fuera de alcance**
 
-- Que el admin vea o apruebe los ajustes del diseñador (pregunta abierta 1).
+- Que el admin vea o apruebe los ajustes del diseñador.
 - Armar la lista en el servidor.
 - Restringir qué celdas se pueden ajustar.
 

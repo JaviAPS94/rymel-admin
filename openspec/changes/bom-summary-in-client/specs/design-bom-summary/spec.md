@@ -2,7 +2,7 @@
 
 ### Requirement: El cliente conserva la lista
 
-`project-front` SHALL ofrecer la pestaña «LISTA DE MATERIALES», generada con las mismas reglas que el admin, y SHALL mostrarla en solo lectura por omisión. El diseñador SHALL poder pasar a edición de forma explícita para ajustarla. La estructura de la lista (estructuras BOM y configuración de la plantilla) SHALL seguir definiéndose solo en el admin: nada de lo que se ajusta en el cliente la cambia.
+`project-front` SHALL ofrecer la pestaña «LISTA DE MATERIALES», generada desde la base que define la plantilla, y SHALL mostrarla en solo lectura por omisión. El diseñador SHALL poder pasar a edición de forma explícita para ajustarla. La base de la lista (estructuras BOM y configuración de la plantilla) SHALL definirse solo en el admin, y nada de lo que se ajusta en el cliente la cambia. El cliente SHALL poder añadir filas (elementos adicionales) y cambiar las que hay.
 
 #### Scenario: Pestaña en solo lectura
 
@@ -22,15 +22,9 @@
 #### Scenario: Ajustar no cambia la estructura
 
 - **WHEN** el diseñador ajusta y guarda la lista del diseño 28
-- **THEN** la estructura BOM `1-25-220-120` y la plantilla quedan igual, y el admin en `/design-bom` sigue generando la misma lista
+- **THEN** la estructura BOM `1-25-220-120` y la plantilla quedan igual, y otro diseño con la misma plantilla sigue viendo la lista base
 
-## ADDED Requirements
+#### Scenario: Añadir una fila
 
-### Requirement: Las dos listas coinciden
-
-Mientras la lista se arme en el cliente y en el admin, las dos copias de `buildBomSummary` SHALL producir la misma lista generada para los mismos datos. Un cambio de regla SHALL hacerse en las dos a la vez.
-
-#### Scenario: Mismo diseño en los dos lados
-
-- **WHEN** se arma la lista de los `sub_design` 90 y 91 en el cliente (`check-design-bom.ts`) y en el admin (`buildBomSummary.spec.ts`)
-- **THEN** las dos coinciden con la misma línea base
+- **WHEN** el diseñador, en edición, escribe un ítem adicional en una fila vacía de un semielaborado y guarda los ajustes
+- **THEN** al volver a abrir el diseño la fila sigue ahí, y la lista base de la plantilla no cambia

@@ -34,3 +34,9 @@
 
 - [x] 5.1 `dump-design-bom-input.ts` (back) vuelca la respuesta real de `GET /design/by-id/28` y de la búsqueda de BOM, y `scripts/check-design-bom.ts` (admin) arma con ella la lista: 6/6, incluido `240 · Fibra de 2 mm · 3 · KLS` en el CSV
 - [x] 5.2 `copilot-rules.md`: la lista de materiales vive en el admin
+
+## 6. Retirada (2026-10-27)
+
+- [x] 6.1 La pestaña vuelve al cliente (`bom-summary-in-client`)
+- [x] 6.2 La sección `/design-bom` del admin y su copia de `buildBomSummary` se retiran (`bom-accessory-fields`, tarea 4); los casos de prueba pasan al cliente
+- [x] 6.3 El spec se queda con las reglas de armado y los fallos explicados (en el cliente), con que el cliente conserva la lista y con el filtro de país opcional

@@ -11,7 +11,6 @@ import {
   IconBoxSeam,
   IconUserCog,
   IconFileSpreadsheet,
-  IconClipboardList,
   IconMathFunction,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
@@ -47,11 +46,6 @@ export const Navbar = () => {
             path: "/templates",
             label: "Plantillas",
             icon: IconFileSpreadsheet,
-          },
-          {
-            path: "/design-bom",
-            label: "Lista de materiales",
-            icon: IconClipboardList,
           },
         ]
       : []),

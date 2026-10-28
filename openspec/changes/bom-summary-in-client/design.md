@@ -8,7 +8,7 @@
 
 ## Goals / Non-Goals
 
-**Goals:** el cliente ve la lista en solo lectura, la ajusta solo si lo pide, y sus ajustes se guardan con el diseño y sobreviven a guardarlo; avisar cuando un ajuste se hizo sobre una lista que ya cambió; el admin sigue siendo el único sitio donde se define la estructura.
+**Goals:** el cliente ve la lista en solo lectura, la ajusta solo si lo pide, y sus ajustes se guardan con el diseño y sobreviven a guardarlo; avisar cuando un ajuste se hizo sobre una lista que ya cambió; el admin sigue siendo el único sitio donde se define la base (plantilla y estructuras).
 
 **Non-Goals:** que el admin vea o apruebe los ajustes; armar la lista en el servidor; limitar qué celdas se ajustan; fusionar ajustes con una lista nueva.
 
@@ -55,8 +55,8 @@ Tampoco sobre una lista ajustada en lectura: es una instantánea, y desplegar ex
 
 ## Risks / Trade-offs
 
-- **[Riesgo] Una lista ajustada se queda vieja sin que nadie la mire.** → Aviso al abrirla (decisión 3), y el ajuste guarda autor y fecha. Si el admin necesita verlo, va en la pregunta abierta 1.
-- **[Trade-off] Dos copias de `buildBomSummary`** (cliente y admin). → Misma línea base en los dos repos. Además, ahora la huella depende de la copia del cliente: si las copias divergen, el admin y el cliente pueden ver listas distintas sin aviso. Por eso la tarea de paridad entra en este change.
+- **[Riesgo] Una lista ajustada se queda vieja sin que nadie la mire.** → Aviso al abrirla (decisión 3), y el ajuste guarda autor y fecha.
+- **Una sola copia de `buildBomSummary`**, en el cliente. La copia del admin se retiró con su sección por diseño; los casos de prueba están en `project-front/scripts/fixtures/bom-cases.json`.
 - **[Riesgo] Hoja grande en `nvarchar(max)`.** → La lista de los diseños 28 y 29 son decenas de celdas. Se limita el cuerpo del `PUT` igual que el de diseños.
 - **[Riesgo] Dos diseñadores ajustan a la vez.** → Gana el último. Se acepta por el uso medido (2 diseños); si molesta, `updated_at` como precondición del `PUT`.
 
@@ -70,5 +70,5 @@ Rollback: revertir el cliente deja la tabla sin usar; revertir la migración la 
 
 ## Resolved Questions (2026-10-27)
 
-1. **¿El admin debe ver los ajustes del diseñador?** Sí, en una sección aparte, para ver y comparar, sin modificarlos. Va en el change `admin-bom-review`.
+1. **¿El admin debe ver los ajustes del diseñador?** No. Se planteó una revisión por diseño en el admin, y el 2026-10-27 se aclaró que no se busca eso: la lista la define la plantilla y la ve el cliente. Lo que sí se pidió es ver los diseños, que va en `admin-design-browser`.
 2. **¿Hay que restringir qué se puede ajustar?** No: también filas, no solo cantidades. La decisión 1 (guardar la hoja entera) se mantiene.
