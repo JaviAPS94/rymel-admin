@@ -25,4 +25,4 @@
 
 - [ ] 4.1 A mano con el diseño 28: generar en lectura, editar `=3*4`, guardar, reabrir, cambiar un nodo de `1-25-220-120` en el admin, reabrir y ver el aviso, volver a la generada
 - [x] 4.2 `copilot-rules.md` del admin: el admin define la estructura, el cliente consulta y ajusta, y los ajustes viven en `design_bom_adjustment`
-- [ ] 4.3 Resolver o dejar registradas las preguntas abiertas de `design.md`
+- [x] 4.3 Preguntas de `design.md` respondidas el 2026-10-27: el admin ve y compara los ajustes (change `admin-bom-review`), y se ajustan también filas

@@ -68,7 +68,7 @@ Tampoco sobre una lista ajustada en lectura: es una instantánea, y desplegar ex
 
 Rollback: revertir el cliente deja la tabla sin usar; revertir la migración la borra. No hay datos previos.
 
-## Open Questions
+## Resolved Questions (2026-10-27)
 
-1. **¿El admin debe ver los ajustes del diseñador?** Por ejemplo, en `/design-bom`, con una marca «ajustada por X el día Y». Encaja con que el admin administra la lista, pero no se ha pedido.
-2. **¿Hay que restringir qué se puede ajustar?** «Pequeñas modificaciones» sugiere cantidades. Si se restringe, la decisión 1 cambia a cambios por fila.
+1. **¿El admin debe ver los ajustes del diseñador?** Sí, en una sección aparte, para ver y comparar, sin modificarlos. Va en el change `admin-bom-review`.
+2. **¿Hay que restringir qué se puede ajustar?** No: también filas, no solo cantidades. La decisión 1 (guardar la hoja entera) se mantiene.
