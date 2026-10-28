@@ -10,18 +10,27 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cases from "@components/bom-summary/__fixtures__/client-bom-cases.json";
 
-const real = (cases as Record<string, { sheets: unknown[]; bom: { nodes: unknown[] }; element: { values: string } }>)[
-  "sub_design 90 · plegado"
-];
+type Case = {
+  sheets: unknown[];
+  bom: { nodes: unknown[] };
+  element: { values: string };
+  cells: Record<string, { value?: string }>;
+};
+const real = (cases as unknown as Record<string, Case>)["sub_design 90 · plegado"]!;
 
 const mocks = vi.hoisted(() => ({
-  list: vi.fn(),
+  bomReview: vi.fn(),
   getById: vi.fn(),
+  getBomAdjustment: vi.fn(),
   searchByCode: vi.fn(),
 }));
 
 vi.mock("@services/designService", () => ({
-  designService: { list: mocks.list, getById: mocks.getById },
+  designService: {
+    bomReview: mocks.bomReview,
+    getById: mocks.getById,
+    getBomAdjustment: mocks.getBomAdjustment,
+  },
 }));
 vi.mock("@services/bomService", () => ({
   bomService: { searchByCode: mocks.searchByCode },
@@ -31,6 +40,7 @@ vi.mock("@components/Layout", () => ({
 }));
 
 import { DesignBomPage } from "./DesignBomPage";
+import { bomFingerprint } from "@components/bom-summary/bomFingerprint";
 
 const element = (id: number, sapReference: string | null) => ({
   id,
@@ -69,14 +79,32 @@ const cellsWith = (text: string) =>
 const cellAt = (ref: string) => document.querySelector(`[data-cell="${ref}"]`) as HTMLElement;
 const sheetReady = () => waitFor(() => expect(cellsWith("Fibra de 2 mm").length).toBeGreaterThan(0));
 
+const reviewRow = (design: typeof DESIGN_28, status: string, adjustment: unknown = null) => ({
+  id: design.id,
+  code: design.code,
+  name: design.name,
+  createdAt: "2026-10-01T00:00:00Z",
+  country: "Ecuador",
+  elements: design.designElements.map(({ element: e }) => ({
+    id: e.id,
+    sapReference: e.sapReference ?? undefined,
+    normId: 1,
+    normName: "NTE INEN 2120",
+  })),
+  status,
+  adjustment,
+});
+
 beforeEach(() => {
-  mocks.list.mockReset().mockResolvedValue({
-    data: [DESIGN_28, SIN_REFERENCIA],
+  mocks.bomReview.mockReset().mockResolvedValue({
+    data: [reviewRow(DESIGN_28, "generable"), reviewRow(SIN_REFERENCIA, "no-reference")],
     total: 2,
     page: 1,
     limit: 10,
     totalPages: 1,
+    norms: [{ id: 1, name: "NTE INEN 2120" }],
   });
+  mocks.getBomAdjustment.mockReset().mockResolvedValue(null);
   mocks.getById.mockReset().mockImplementation(async (id: number) => (id === 28 ? DESIGN_28 : SIN_REFERENCIA));
   mocks.searchByCode
     .mockReset()
@@ -169,5 +197,115 @@ describe("lista de materiales por diseño", () => {
     fireEvent.mouseDown(cellsWith("▶")[0]!);
     await waitFor(() => expect(cellAt("D3").textContent).toContain("3"));
     expect(cellAt("D3").textContent).not.toContain("99");
+  });
+});
+
+describe("listado para revisar", () => {
+  it("sin búsqueda por código, con estado y norma por diseño", async () => {
+    renderPage();
+    expect(await screen.findByText("1DAA26A54-CO CV")).toBeTruthy();
+    expect(screen.queryByPlaceholderText(/código/i)).toBeNull();
+    expect(screen.getByRole("button", { name: /1DAA26A54-CO CV/ }).textContent).toContain("Generable");
+    expect(screen.getAllByText(/NTE INEN 2120/).length).toBeGreaterThan(0);
+  });
+
+  it("filtra por estado y por norma, y vuelve a la primera página", async () => {
+    renderPage();
+    await screen.findByText("1DAA26A54-CO CV");
+    fireEvent.change(screen.getByLabelText("Estado de la lista"), { target: { value: "adjusted" } });
+    await waitFor(() =>
+      expect(mocks.bomReview).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: "adjusted", page: 1 }),
+      ),
+    );
+    fireEvent.change(screen.getByLabelText("Norma"), { target: { value: "1" } });
+    await waitFor(() =>
+      expect(mocks.bomReview).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: "adjusted", normId: 1 }),
+      ),
+    );
+  });
+});
+
+describe("lista ajustada por el cliente", () => {
+  /** La lista generada, con una cantidad cambiada, una fila añadida y un accesorio quitado. */
+  const adjustedCells = () => {
+    const cells: Record<string, { value?: string; computed?: string | number }> = JSON.parse(
+      JSON.stringify(real.cells),
+    );
+    cells.D3 = { value: "5", computed: 5 };
+    const accessoryRow = Object.entries(cells).find(([, cell]) => cell.value === "501")![0].slice(1);
+    for (const column of "BCDEFGHI") delete cells[`${column}${accessoryRow}`];
+    const last = Math.max(...Object.keys(cells).map((ref) => Number(ref.slice(1))));
+    cells[`B${last + 1}`] = { value: "999" };
+    cells[`C${last + 1}`] = { value: "Ítem nuevo" };
+    return cells;
+  };
+
+  const withAdjustment = async (baseFingerprint?: string) => {
+    mocks.getBomAdjustment.mockResolvedValue({
+      designId: 28,
+      bomId: BOM.id,
+      baseFingerprint: baseFingerprint ?? (await bomFingerprint(real.cells as never)),
+      cells: adjustedCells(),
+      expandedNodes: [],
+      updatedBy: "disenador@rymel",
+      updatedAt: "2026-10-27T15:00:00Z",
+    });
+  };
+
+  it("compara con la generada: cambiada, añadida y quitada, en solo lectura", async () => {
+    await withAdjustment();
+    renderPage();
+    await choose("1DAA26A54-CO CV");
+
+    expect(await screen.findByText(/Ajustada por el cliente \(disenador@rymel\)/)).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByLabelText("Resumen de cambios").textContent).toBe(
+        "1 fila(s) cambiada(s) · 1 añadida(s) · 1 quitada(s)",
+      ),
+    );
+
+    const adjusted = screen.getByRole("table", { name: "Ajustada por el cliente" });
+    const changed = adjusted.querySelector('[data-status="changed"]')!;
+    expect(changed.textContent).toContain("240");
+    expect(changed.querySelector("[data-changed]")!.textContent).toBe("5");
+    expect(adjusted.querySelector('[data-status="added"]')!.textContent).toContain("999");
+    const generated = screen.getByRole("table", { name: "Generada ahora" });
+    expect(generated.querySelector('[data-status="removed"]')!.textContent).toContain("501");
+
+    // Nada que escribir ni que guardar o borrar: tablas, no la hoja editable
+    expect(document.querySelector("[data-cell]")).toBeNull();
+    for (const table of screen.getAllByRole("table")) {
+      expect(table.querySelector("input, textarea, [contenteditable]")).toBeNull();
+    }
+    expect(screen.queryByText(/Guardar|Borrar|Descartar/)).toBeNull();
+    expect(screen.queryByText(/cambió desde que el cliente/)).toBeNull();
+  });
+
+  it("avisa si la lista generada cambió desde el ajuste", async () => {
+    await withAdjustment("a".repeat(64));
+    renderPage();
+    await choose("1DAA26A54-CO CV");
+    expect(await screen.findByText(/La lista generada cambió desde que el cliente/)).toBeTruthy();
+  });
+
+  it("exporta la ajustada con lo que guardó el cliente", async () => {
+    await withAdjustment();
+    let csv = "";
+    let name = "";
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      void blob.text().then((text) => (csv = text));
+      return "blob:lista";
+    }) as never;
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      name = this.download;
+    });
+    renderPage();
+    await choose("1DAA26A54-CO CV");
+    fireEvent.click(await screen.findByText("Exportar ajustada"));
+    await waitFor(() => expect(csv).toContain(";240;Fibra de 2 mm;5;"));
+    expect(name).toContain("ajustada");
   });
 });

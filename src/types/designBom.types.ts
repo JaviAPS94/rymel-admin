@@ -81,10 +81,48 @@ export interface DesignDetail extends DesignSummary {
   subDesigns: { id: number; name: string; code: string; data: SavedSheet }[];
 }
 
-export interface PaginatedDesigns {
-  data: DesignSummary[];
+
+/** Estado de la lista de un diseño en el listado de revisión. */
+export type BomReviewStatus = 'adjusted' | 'generable' | 'no-structure' | 'no-reference';
+
+export interface BomReviewFilters {
+  page: number;
+  limit: number;
+  normId?: number;
+  sapReference?: string;
+  status?: BomReviewStatus;
+  dateField?: 'created' | 'adjusted';
+  from?: string;
+  to?: string;
+}
+
+export interface BomReviewRow {
+  id: number;
+  code: string;
+  name: string;
+  createdAt: string;
+  country?: string;
+  elements: { id: number; sapReference?: string; normId?: number; normName?: string }[];
+  status: BomReviewStatus;
+  adjustment: { updatedBy?: string; updatedAt: string } | null;
+}
+
+export interface BomReviewPage {
+  data: BomReviewRow[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
+  norms: { id: number; name: string }[];
+}
+
+/** La lista tal como la guardó el cliente (`design_bom_adjustment`). */
+export interface BomAdjustment {
+  designId: number;
+  bomId: number;
+  baseFingerprint: string;
+  cells: Record<string, SavedCell>;
+  expandedNodes: number[];
+  updatedBy?: string;
+  updatedAt: string;
 }

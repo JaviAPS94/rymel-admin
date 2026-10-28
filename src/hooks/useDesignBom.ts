@@ -1,11 +1,21 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { designService } from '@services/designService';
 import { bomService } from '@services/bomService';
+import type { BomReviewFilters } from '@/types/designBom.types';
 
-export const useDesigns = (page: number, designCode: string) =>
+export const useBomReview = (filters: BomReviewFilters) =>
   useQuery({
-    queryKey: ['designs', page, designCode],
-    queryFn: () => designService.list({ page, limit: 10, designCode: designCode || undefined }),
+    queryKey: ['bom-review', filters],
+    queryFn: () => designService.bomReview(filters),
+    // Al cambiar un filtro, el listado y las normas del filtro siguen a la
+    // vista hasta que llega la respuesta
+    placeholderData: keepPreviousData,
+  });
+
+export const useBomAdjustment = (id: number) =>
+  useQuery({
+    queryKey: ['bom-adjustment', id],
+    queryFn: () => designService.getBomAdjustment(id),
   });
 
 export const useDesignDetail = (id: number | null) =>
