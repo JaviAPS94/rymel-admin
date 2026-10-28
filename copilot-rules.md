@@ -198,28 +198,41 @@ El menú contextual y los paneles escriben por las mismas mutaciones
 
 ### Lista de materiales de un diseño
 
-Se consulta en `/design-bom` y también en la pestaña del diseñador, en
-project-front. Se arma en el navegador con `buildBomSummary`, portado de
-project-front **sin cambiar sus reglas**, y la copia del cliente sigue viva:
-un cambio de regla se hace en los dos repositorios a la vez. La regla:
-estructura BOM cuyo código es prefijo de la referencia ERP del elemento,
-semielaborados de hojas a raíz, ítems vinculados dentro de sus zonas y
-accesorios del elemento. `buildBomSummary.spec.ts` lo fija contra la salida
-que daba el cliente; si una regla tiene que cambiar, esa prueba cambia con
-ella y a propósito. En project-front, `scripts/check-bom-parity.ts` pasa los
-mismos casos por la copia del cliente.
+Se consulta en `/design-bom` y en la pestaña del diseñador, en project-front.
+Se arma en el navegador con `buildBomSummary`, que vive **en los dos
+repositorios con las mismas reglas**: un cambio de regla se hace en los dos a
+la vez, y la línea base se regenera desde el cliente con
+`scripts/check-bom-parity.ts --write`. `buildBomSummary.spec.ts` (aquí) y
+`check-bom-parity.ts` (allí) la fijan; si cambia, cambia a propósito.
 
-**Reparto:** el admin define de qué está hecha la lista (estructuras BOM y
-configuración de la plantilla). El diseñador la ve en solo lectura y, con
-«Editar», la ajusta. Sus ajustes se guardan con el diseño en
-`design_bom_adjustment` (`/design/:id/bom-adjustment`), no en `sub_design`.
-Al abrirlos, el cliente compara la huella de la lista generada y avisa si
-cambió. Nada de lo que ajusta el diseñador cambia la estructura.
+**Dos fuentes.** La **plantilla** (admin) define qué ítems entran: zonas de
+semielaborado, tablas de catálogo e ítems vinculados con su cantidad. La
+**norma** (cliente) define los **accesorios** de cada elemento, cada uno con
+su semielaborado; vienen del ERP por `GET /accesory` con referencia, unidad y
+costos, y la norma les pone la cantidad. De la norma solo entran los
+accesorios. La estructura BOM es la cuyo código es prefijo de la referencia
+ERP del elemento (`bom-reference-match.ts` en project-back, el mismo SQL para
+la búsqueda y para el listado de revisión).
 
-En el admin se edita como una hoja de Excel, con la rejilla y el motor del
-editor de plantillas (`BomSheetEditor`). Ahí lo editado no se guarda y
-desplegar un semielaborado rearma la hoja; la exportación a CSV sí lleva lo
-editado. El admin todavía no ve los ajustes del diseñador.
+**Columnas:** A–E (ID, Ítem, Descripción, Cantidad, U.M.) y, al final para no
+mover las de siempre, F–I (Referencia, Costo promedio, Último costo,
+Observación). Lo que le falta a un accesorio se dice en Observación y no se
+rellena.
+
+**Reparto.** El admin define la estructura y la plantilla. El diseñador ve
+la lista en solo lectura y, con «Editar», la ajusta —también filas—; sus
+ajustes se guardan con el diseño en `design_bom_adjustment`
+(`/design/:id/bom-adjustment`), no en `sub_design`. Nada de lo que ajusta
+cambia la estructura. El admin **revisa** esos ajustes sin modificarlos:
+`/design-bom` lista los diseños con filtros (norma, referencia, estado,
+fecha; `POST /design/bom-review`) y compara la ajustada con la generada
+(`bomDiff.ts`, filas emparejadas por semielaborado + Ítem). Los dos lados
+avisan si la lista generada cambió desde el ajuste, con la misma huella
+(`bomFingerprint.ts`, también en los dos repositorios).
+
+Un diseño sin ajuste se edita en el admin como una hoja de Excel, con la
+rejilla del editor de plantillas (`BomSheetEditor`), sin guardar; la
+exportación a CSV lleva lo editado.
 
 ## Deuda conocida
 
