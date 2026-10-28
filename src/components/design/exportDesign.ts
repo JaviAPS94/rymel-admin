@@ -72,6 +72,8 @@ export const buildDesignWorkbook = async (
   workbook.creator = "Rymel admin";
   const used = new Set<string>();
   for (const subDesign of design.subDesigns) {
+    // La base va calculada en la pestaña de la lista de materiales
+    if (subDesign.data?.billOfMaterials) continue;
     addSheet(workbook, subDesign.data?.name || subDesign.name, subDesign.data, used);
   }
   for (const subCost of design.cost?.subCosts ?? []) {

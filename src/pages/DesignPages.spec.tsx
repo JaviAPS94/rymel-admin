@@ -237,12 +237,12 @@ describe("detalle de un diseño", () => {
     await waitFor(() => expect(cellsWith("100").length).toBe(1));
   });
 
-  it("sin ajuste, la lista se genera como la ve el cliente y despliega sus hijos", async () => {
+  it("sin ajuste ni base, la lista se genera desde la estructura y despliega sus hijos", async () => {
     renderAt("/designs/28");
     fireEvent.click(await screen.findByRole("tab", { name: "Lista de materiales" }));
     await waitFor(() => expect(cellsWith("Fibra de 2 mm").length).toBe(1));
     expect(mocks.searchByCode).toHaveBeenCalledWith("1-25-220-120-CV-CT-NTCA-CO-ST");
-    expect(screen.getByText(/Generada desde la plantilla/)).toBeTruthy();
+    expect(screen.getByText(/no trae lista base de su plantilla/)).toBeTruthy();
     expect(cellsWith("Indicador nivel aceite").length).toBe(1);
     fireEvent.mouseDown(cellsWith("▶")[0]!);
     await waitFor(() => expect(cellsWith("▼").length).toBe(1));
@@ -308,5 +308,42 @@ describe("detalle de un diseño", () => {
     expect(design.id).toBe(28);
     expect(bom.name).toBe("Lista de materiales");
     expect(JSON.stringify(bom.sheet.cells)).toContain("Fibra de 2 mm");
+  });
+
+  it("con lista base de la plantilla, la calcula con los valores del diseño y le suma los accesorios", async () => {
+    const BASE = {
+      id: "base",
+      name: "Lista de materiales",
+      billOfMaterials: { structureId: 2, structureCode: "1-25-220-120", structureName: "Estructura de prueba" },
+      cells: {
+        A1: { value: "1", formula: "1", computed: "1", bold: true },
+        B1: { value: "Semielaborado : Bobina", formula: "Semielaborado : Bobina", computed: "Semielaborado : Bobina" },
+        B2: { value: "Item", formula: "Item", computed: "Item" },
+        B3: { value: "240", formula: "240", computed: "240" },
+        C3: { value: "=Hoja1!I2", formula: "=Hoja1!I2", computed: "viejo" },
+        D3: { value: "=Hoja1!B2", formula: "=Hoja1!B2", computed: "viejo" },
+      },
+    };
+    mocks.getById.mockResolvedValue({
+      ...DESIGN,
+      subDesigns: [...DESIGN.subDesigns, { id: 91, name: "Lista de materiales", code: "b", data: BASE }],
+    });
+    renderAt("/designs/28");
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Hojas de diseño" }));
+    await waitFor(() => expect(cellsWith("3").length).toBeGreaterThan(0));
+    expect(screen.queryByRole("button", { name: "Lista de materiales" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Lista de materiales" }));
+    expect(await screen.findByText(/Base de la plantilla, calculada con los valores del diseño/)).toBeTruthy();
+    await waitFor(() => expect(cellsWith("Fibra de 2 mm").length).toBe(1));
+    expect(cellsWith("viejo").length).toBe(0);
+    expect(cellsWith("Indicador nivel aceite").length).toBe(1);
+    expect(mocks.searchByCode).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a Excel/ }));
+    await waitFor(() => expect(mocks.download).toHaveBeenCalled());
+    const [, bom] = mocks.download.mock.lastCall!;
+    expect(JSON.stringify(bom.sheet.cells)).toContain("Indicador nivel aceite");
   });
 });

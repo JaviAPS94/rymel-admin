@@ -6,7 +6,7 @@
  * `computed` y estilos, no el `content` de la plantilla.
  */
 
-import type { BomSourceSheet, BomSummaryCell } from "@rymel/design-template";
+import type { BomSheetMarker, BomSourceSheet, BomSummaryCell } from "@rymel/design-template";
 
 export interface NamedOption {
   id: number;
@@ -38,6 +38,8 @@ export interface SavedSheet extends BomSourceSheet {
   freezeRow?: number;
   freezeColumn?: number;
   mergedCells?: { startCell: string; endCell: string; rowSpan: number; colSpan: number }[];
+  /** La lista de materiales base que trajo la plantilla; oculta entre las hojas. */
+  billOfMaterials?: BomSheetMarker;
 }
 
 export interface DesignElement {

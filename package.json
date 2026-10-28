@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@rymel/design-template": "github:JaviAPS94/rymel-design-template#v2.4.0",
+    "@rymel/design-template": "github:JaviAPS94/rymel-design-template#v2.5.0",
     "@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.8.0",
     "@tabler/icons-react": "^3.35.0",
     "@tailwindcss/vite": "^4.1.17",

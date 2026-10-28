@@ -144,7 +144,11 @@ const DesignView = ({ design }: { design: DesignDetail }) => {
 
       {tab === "summary" && <Summary design={design} versions={versions.data} />}
       {tab === "sheets" && (
-        <SheetPicker sheets={design.subDesigns.map((subDesign) => subDesign.data)} empty="El diseño no tiene hojas." />
+        <SheetPicker
+          // La lista de materiales base va en su pestaña, como en el cliente
+          sheets={design.subDesigns.map((subDesign) => subDesign.data).filter((sheet) => !sheet?.billOfMaterials)}
+          empty="El diseño no tiene hojas."
+        />
       )}
       {tab === "costs" && (
         <SheetPicker
@@ -365,8 +369,16 @@ const BomView = ({ bom }: { bom: ReturnType<typeof useDesignBom> }) => {
             Ajustada por el cliente{state.adjustment.updatedBy ? ` (${state.adjustment.updatedBy})` : ""} el{" "}
             {formatDate(state.adjustment.updatedAt)}. Es la que ve el cliente; no se modifica desde el admin.
           </span>
+        ) : bom.fromTemplate ? (
+          <>
+            Base de la plantilla, calculada con los valores del diseño, más los accesorios de la norma del
+            elemento, como la ve el cliente.
+          </>
         ) : (
-          <>Generada desde la plantilla, los accesorios de la norma y la estructura BOM, como la ve el cliente.</>
+          <>
+            El diseño no trae lista base de su plantilla: se genera desde la estructura de la referencia
+            del elemento y los accesorios de la norma, como la ve el cliente.
+          </>
         )}
         {state.structure && (
           <>

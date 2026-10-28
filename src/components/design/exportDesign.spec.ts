@@ -51,6 +51,19 @@ describe("buildDesignWorkbook", () => {
     expect(read.worksheets.map((ws) => ws.name)).toEqual(["Hoja1", "Costos Hoja1", "Lista de materiales"]);
   });
 
+  it("la hoja base del diseño no se exporta aparte: va calculada en la lista de materiales", async () => {
+    const withBase = {
+      ...DESIGN,
+      subDesigns: [
+        ...DESIGN.subDesigns,
+        { id: 91, name: "Lista de materiales", code: "b", data: sheet("Lista de materiales", { D3: { value: "=Hoja1!B1", computed: "viejo" } }, { billOfMaterials: { structureId: 2, structureCode: "X", structureName: "X" } }) },
+      ],
+    } as unknown as DesignDetail;
+    const workbook = await buildDesignWorkbook(withBase, { name: "Lista de materiales", sheet: sheet("Lista", { D3: { value: "24" } }) });
+    expect(workbook.worksheets.map((ws) => ws.name)).toEqual(["Hoja1", "Costos Hoja1", "Lista de materiales"]);
+    expect(workbook.getWorksheet("Lista de materiales")!.getCell("D3").value).toBe(24);
+  });
+
   it("exporta los valores calculados, con números como números", async () => {
     const ws = (await roundTrip(null)).getWorksheet("Hoja1")!;
     expect(ws.getCell("B1").value).toBe(24);
