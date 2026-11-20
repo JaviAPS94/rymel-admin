@@ -1,9 +1,9 @@
 ## 1. Sistema de diseño: `@rymel/ui` v0.2.0 (repo `rymel-ui`)
 
-- [ ] 1.1 `Modal`: pila de modales abiertos; Esc cierra solo el de arriba y respeta `event.defaultPrevented`
-- [ ] 1.2 `Modal`: el fondo (`data-modal-overlay`) se desplaza con un modal alto; cabecera fija; el cuerpo sin desplazamiento propio
-- [ ] 1.3 Clases de marca para `sonner` exportadas desde el paquete (`toastClassNames`) y ejemplo en la galería
-- [ ] 1.4 Probar en la galería (modal largo, dos modales apilados), `npm run verify`, etiqueta `v0.2.0` y push
+- [x] 1.1 `Modal`: pila de modales abiertos; Esc cierra solo el de arriba y respeta `event.defaultPrevented`
+- [x] 1.2 `Modal`: el fondo (`data-modal-overlay`) se desplaza con un modal alto; cabecera fija; el cuerpo sin desplazamiento propio
+- [x] 1.3 Clases de marca para `sonner` exportadas desde el paquete (`toastClassNames`) y ejemplo en la galería
+- [x] 1.4 Probar en la galería (modal largo, dos modales apilados), `npm run verify`, etiqueta `v0.2.0` y push
 
 ## 2. Admin: base
 
