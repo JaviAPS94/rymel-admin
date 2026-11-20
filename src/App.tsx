@@ -13,6 +13,7 @@ import { TemplateListPage } from "@pages/TemplateListPage";
 import { TemplateEditorPage } from "@pages/TemplateEditorPage";
 import { PhantomItemListPage } from "@pages/PhantomItemListPage";
 import { PhantomItemEditorPage } from "@pages/PhantomItemEditorPage";
+import { SemiFinishedListPage } from "@pages/SemiFinishedListPage";
 import { ProtectedRoute } from "@components/ProtectedRoute";
 import { useAuthStore } from "@store/authStore";
 import { Role } from "@/types/user.types";
@@ -84,6 +85,12 @@ const App = () => {
         <Route path="/templates/:id">
           <ProtectedRoute roles={[Role.ADMIN]}>
             <TemplateEditorPage />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/semi-finished">
+          <ProtectedRoute roles={[Role.ADMIN]}>
+            <SemiFinishedListPage />
           </ProtectedRoute>
         </Route>
 

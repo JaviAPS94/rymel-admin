@@ -13,6 +13,7 @@ import {
   IconFileDescription,
   IconFileSpreadsheet,
   IconMathFunction,
+  IconPuzzle,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { NavDropdown } from "@components/NavDropdown";
@@ -33,6 +34,9 @@ export const Navbar = () => {
 
   const catalogItems = [
     { path: "/bom", label: "Materiales", icon: IconSitemap },
+    ...(isAdmin
+      ? [{ path: "/semi-finished", label: "Semielaborados", icon: IconPuzzle }]
+      : []),
     { path: "/phantom-items", label: "Fantasmas", icon: IconGhost2 },
     { path: "/resources", label: "Recursos", icon: IconFiles },
   ];

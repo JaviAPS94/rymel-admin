@@ -12,6 +12,19 @@ export interface SemiFinished {
   name: string;
 }
 
+/** Fila del catálogo de semielaborados: con cuántas estructuras activas lo usan. */
+export interface SemiFinishedAdminItem extends SemiFinished {
+  bomCount: number;
+  updatedAt: string;
+}
+
+export interface CreateSemiFinishedDto {
+  code: string;
+  name: string;
+}
+
+export type UpdateSemiFinishedDto = Partial<CreateSemiFinishedDto>;
+
 /** Una familia de fantasmas colgada de un semielaborado del árbol. */
 export interface BomNodePhantomFamily {
   id: number;
