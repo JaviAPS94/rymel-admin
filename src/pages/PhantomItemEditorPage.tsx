@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams, useSearch } from "wouter";
-import { IconArrowLeft, IconAlertTriangle, IconDeviceFloppy, IconTrash } from "@tabler/icons-react";
+import { IconAlertTriangle, IconGhost2, IconDeviceFloppy, IconTrash } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/Card";
 import { Input } from "@components/ui/Input";
 import { Select } from "@components/ui/Select";
 import { Layout } from "@components/Layout";
+import {
+  Button as UIButton,
+  Card as UICard,
+  EmptyState,
+  Notice,
+  Page,
+  PageHeader,
+} from "@rymel/ui";
 import { PhantomItemHeaderForm } from "@components/phantom-item/PhantomItemHeaderForm";
 import { PhantomItemGrid, type GridSelection } from "@components/phantom-item/PhantomItemGrid";
 import { FormulaBar } from "@components/phantom-item/FormulaBar";
@@ -236,7 +244,7 @@ const PhantomItemEditorContent = ({
   };
 
   return (
-    <div className="space-y-6">
+    <>
       <Card>
         <CardHeader>
           <CardTitle>Cabecera</CardTitle>
@@ -305,11 +313,13 @@ const PhantomItemEditorContent = ({
       </Card>
 
       {validationErrors.length > 0 && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm space-y-1">
+        <Notice tone="danger">
           {validationErrors.map((message) => (
-            <p key={message}>{message}</p>
+            <span key={message} className="block">
+              {message}
+            </span>
           ))}
-        </div>
+        </Notice>
       )}
 
       <Card>
@@ -339,7 +349,7 @@ const PhantomItemEditorContent = ({
           </Button>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
@@ -380,47 +390,40 @@ export const PhantomItemEditorPage = () => {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleBack}
-            className="p-2 text-gray-500 hover:text-rymel-blue hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            <IconArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {isNew ? "Nuevo fantasma" : `Fantasma ${detail?.itemCode ?? ""}`}
-          </h1>
-          {isAdmin && !isNew && detail && (
-            <Button variant="outline" size="sm" className="ml-auto" onClick={() => setConfirmingDelete(true)}>
-              <IconTrash className="h-4 w-4 mr-2" />
+    <Layout bare>
+      <PageHeader
+        icon={<IconGhost2 />}
+        back={{ label: "Fantasmas", onClick: handleBack }}
+        title={isNew ? "Nuevo fantasma" : `Fantasma ${detail?.itemCode ?? ""}`}
+        description={!isNew && detail ? detail.shortDescription : undefined}
+        actions={
+          isAdmin &&
+          !isNew &&
+          detail && (
+            <UIButton
+              variant="dangerLight"
+              icon={<IconTrash className="h-[18px] w-[18px]" />}
+              onClick={() => setConfirmingDelete(true)}
+            >
               Eliminar
-            </Button>
-          )}
-        </div>
+            </UIButton>
+          )
+        }
+      />
 
-        {confirmingDelete && detail && (
-          <DeletePhantomItemsDialog
-            itemCodes={[detail.itemCode]}
-            isDeleting={deleteMutation.isPending}
-            onConfirm={handleDelete}
-            onClose={() => setConfirmingDelete(false)}
-          />
-        )}
-
+      <Page>
         {!isNew && isLoading && (
-          <div className="text-center py-8 text-gray-500">Cargando...</div>
+          <UICard>
+            <p className="m-0 text-sm text-gray-600">Cargando…</p>
+          </UICard>
         )}
 
-        {!isNew && error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            Error al cargar el fantasma
-          </div>
-        )}
+        {!isNew && error && <EmptyState tone="error" title="Error al cargar el fantasma" />}
 
         {processesLoading && (
-          <div className="text-center py-8 text-gray-500">Cargando procesos...</div>
+          <UICard>
+            <p className="m-0 text-sm text-gray-600">Cargando procesos…</p>
+          </UICard>
         )}
 
         {processes && processes.length > 0 &&
@@ -439,7 +442,16 @@ export const PhantomItemEditorPage = () => {
               onSaved={handleSaved}
             />
           )}
-      </div>
+      </Page>
+
+      {confirmingDelete && detail && (
+        <DeletePhantomItemsDialog
+          itemCodes={[detail.itemCode]}
+          isDeleting={deleteMutation.isPending}
+          onConfirm={handleDelete}
+          onClose={() => setConfirmingDelete(false)}
+        />
+      )}
     </Layout>
   );
 };

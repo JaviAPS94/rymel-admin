@@ -44,10 +44,10 @@
 
 ## 6. Admin: detalle, editores y Dashboard (solo marco)
 
-- [ ] 6.1 Detalle de diseño: `PageHeader` con código, etiquetas y acciones; pestañas del sistema
-- [ ] 6.2 Editor de materiales, editor de plantillas y editor de fantasmas: `PageHeader` y acciones; el cuerpo intacto
-- [ ] 6.3 Dashboard con tarjetas de acceso del sistema de diseño
-- [ ] 6.4 Pasar los `blue-*` restantes al índigo de marca fuera de grillas y editores
+- [x] 6.1 Detalle de diseño: `PageHeader` con código, etiquetas y acciones; pestañas del sistema
+- [x] 6.2 Editor de materiales, editor de plantillas y editor de fantasmas: `PageHeader` y acciones; el cuerpo intacto. El de plantillas usa una banda índigo compacta (una fila) para no quitarle alto a la grilla
+- [x] 6.3 Dashboard con tarjetas de acceso del sistema de diseño, generadas desde `navSections` (sin los contadores en 0 ni los accesos sin función de antes)
+- [x] 6.4 Pasar los `blue-*` restantes al índigo de marca fuera de grillas y editores. El azul del tipo de nodo «Referencia» se queda: es dato de categoría, el mismo que pinta el árbol
 
 ## 7. Cierre
 

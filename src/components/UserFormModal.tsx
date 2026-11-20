@@ -145,7 +145,7 @@ export const UserFormModal = ({ user, onClose }: UserFormModalProps) => {
                   }}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     isSelected
-                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      ? "bg-rymel-soft font-semibold text-rymel-indigo hover:bg-rymel-soft/80"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >

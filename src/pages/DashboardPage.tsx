@@ -1,120 +1,78 @@
 import { Link } from "wouter";
-import { IconUsers, IconFiles, IconHome } from "@tabler/icons-react";
-import { Button } from "@components/ui/Button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@components/ui/Card";
+import { IconArrowRight } from "@tabler/icons-react";
+import { Page, PageHeader } from "@rymel/ui";
 import { useAuthStore } from "@store/authStore";
 import { Layout } from "@components/Layout";
+import { buildSections } from "@components/navSections";
+import { Role } from "@/types/user.types";
 
+/**
+ * Inicio del admin: una tarjeta por sección a la que el usuario tiene acceso,
+ * agrupadas como en la barra. Sale de la misma lista que la barra, así que
+ * nunca ofrece un destino que la barra no tenga.
+ */
 export const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
+  const isAdmin = Boolean(user?.roles?.includes(Role.ADMIN));
+  const name = user?.email?.split("@")[0];
+  const groups = buildSections("/dashboard", isAdmin).filter((section) => section.items);
 
   return (
-    <Layout>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Bienvenido, {user?.name || "Usuario"}
-        </h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Gestiona tus recursos desde este panel de control
-        </p>
-      </div>
+    <Layout bare>
+      <PageHeader
+        eyebrow="Rymel Admin"
+        title={name ? `Hola, ${name}` : "Panel de administración"}
+        description="Catálogos, plantillas, fórmulas y usuarios de la plataforma."
+      />
 
-      {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Link href="/users">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <div className="rounded-lg bg-blue-100 p-2">
-                  <IconUsers className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Usuarios</CardTitle>
-                  <CardDescription>Gestionar usuarios</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-gray-900">0</p>
-              <p className="mt-1 text-sm text-gray-600">
-                Total de usuarios registrados
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <div className="rounded-lg bg-green-100 p-2">
-                <IconFiles className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Recursos</CardTitle>
-                <CardDescription>Gestionar recursos</CardDescription>
-              </div>
+      <Page>
+        {groups.map((group) => (
+          <section
+            key={group.label}
+            aria-labelledby={`grupo-${group.label}`}
+            className="rounded-[20px] border border-gray-200 bg-white p-5 sm:p-7"
+          >
+            <h2
+              id={`grupo-${group.label}`}
+              className="m-0 mb-4 flex items-center gap-2.5 text-lg font-extrabold text-gray-900"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-rymel-blue text-rymel-yellow"
+              >
+                {group.icon}
+              </span>
+              {group.label}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {group.items!.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group flex items-center gap-4 rounded-2xl border border-gray-300 p-4 text-gray-900 no-underline transition-shadow hover:border-transparent hover:shadow-float"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rymel-soft text-rymel-indigo"
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="font-bold">{item.label}</span>
+                    {item.description && (
+                      <span className="text-[13px] text-gray-600">{item.description}</span>
+                    )}
+                  </span>
+                  <IconArrowRight
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-rymel-indigo"
+                  />
+                </Link>
+              ))}
             </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gray-900">0</p>
-            <p className="mt-1 text-sm text-gray-600">
-              Total de recursos disponibles
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <div className="rounded-lg bg-purple-100 p-2">
-                <IconHome className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Proyectos</CardTitle>
-                <CardDescription>Gestionar proyectos</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gray-900">0</p>
-            <p className="mt-1 text-sm text-gray-600">
-              Total de proyectos activos
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mt-8">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          Acciones Rápidas
-        </h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Link href="/users">
-            <Button variant="outline" className="justify-start w-full">
-              <IconUsers className="mr-2 h-5 w-5" />
-              Gestionar Usuarios
-            </Button>
-          </Link>
-          <Button variant="outline" className="justify-start">
-            <IconFiles className="mr-2 h-5 w-5" />
-            Nuevo Recurso
-          </Button>
-          <Button variant="outline" className="justify-start">
-            <IconHome className="mr-2 h-5 w-5" />
-            Nuevo Proyecto
-          </Button>
-          <Button variant="outline" className="justify-start">
-            Ver Reportes
-          </Button>
-        </div>
-      </div>
+          </section>
+        ))}
+      </Page>
     </Layout>
   );
 };

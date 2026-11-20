@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
 import {
-  IconArrowLeft,
   IconPlus,
   IconEdit,
   IconTrash,
@@ -13,6 +12,17 @@ import {
 import { Button } from '@components/ui/Button';
 import { Modal } from '@components/ui/Modal';
 import { Layout } from '@components/Layout';
+import {
+  Badge,
+  Button as UIButton,
+  Card as UICard,
+  EmptyState,
+  HeaderChip,
+  IconButton,
+  Page,
+  PageHeader,
+  Tag,
+} from '@rymel/ui';
 import { BomTree } from '@components/BomTree';
 import { BomNodeFormModal } from '@components/BomNodeFormModal';
 import { BomFormModal } from '@components/BomFormModal';
@@ -141,24 +151,22 @@ export const BomEditorPage = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center py-32 text-gray-400">
-          Cargando árbol BOM...
-        </div>
+      <Layout bare>
+        <PageHeader back={{ label: 'Materiales', href: '/bom' }} title="Cargando estructura…" />
+        <Page>
+          <div className="h-40 animate-pulse rounded-[20px] border border-gray-200 bg-white" />
+        </Page>
       </Layout>
     );
   }
 
   if (error || !bom) {
     return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center py-32 gap-4">
-          <p className="text-red-500">Error al cargar el BOM</p>
-          <Button variant="outline" onClick={() => navigate('/bom')}>
-            <IconArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
-        </div>
+      <Layout bare>
+        <PageHeader back={{ label: 'Materiales', href: '/bom' }} title="No se pudo cargar la estructura" />
+        <Page>
+          <EmptyState tone="error" title="Error al cargar la estructura" />
+        </Page>
       </Layout>
     );
   }
@@ -173,78 +181,62 @@ export const BomEditorPage = () => {
   const productTypes = bom.productTypes ?? [];
 
   return (
-    <Layout>
-      <div className="flex flex-col h-full gap-4">
-        {/* Header */}
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/bom')}
-              className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <IconArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <IconSitemap className="h-6 w-6 text-rymel-blue" />
-                <h1 className="text-2xl font-bold text-gray-900">{bom.code}</h1>
-                <button
-                  onClick={() => setShowEditBomModal(true)}
-                  className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                  title="Editar BOM"
-                >
-                  <IconEdit className="h-4 w-4" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mt-0.5">{bom.name}</p>
-              <div className="flex items-center gap-1.5 flex-wrap mt-2 text-xs">
-                <span className="font-medium text-gray-500">Tipos de equipo:</span>
-                {productTypes.length === 0 ? (
-                  <span className="flex items-center gap-1 text-amber-700">
-                    <IconAlertTriangle className="h-3.5 w-3.5" />
-                    Sin tipos de equipo: se ofrecen todos los fantasmas
-                  </span>
-                ) : (
-                  productTypes.map((code) => (
-                    <span key={code} className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 text-gray-700 font-medium">
-                      {code}
-                    </span>
-                  ))
-                )}
-                <button
-                  onClick={() => setShowProductTypesModal(true)}
-                  className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                  title="Editar tipos de equipo"
-                  aria-label="Editar tipos de equipo"
-                >
-                  <IconEdit className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
+    <Layout bare>
+      <PageHeader
+        icon={<IconSitemap />}
+        back={{ label: 'Materiales', onClick: () => navigate('/bom') }}
+        title={bom.name}
+        meta={<HeaderChip mono>{bom.code}</HeaderChip>}
+        actions={
+          <UIButton
+            variant="outlineLight"
+            icon={<IconEdit className="h-[18px] w-[18px]" />}
+            onClick={() => setShowEditBomModal(true)}
+          >
+            Editar estructura
+          </UIButton>
+        }
+      />
+
+      <Page>
+        {/* Contexto del árbol: tipos de equipo y leyenda */}
+        <UICard as="div" className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2 text-[13px]">
+            <span className="font-semibold text-gray-600">Tipos de equipo:</span>
+            {productTypes.length === 0 ? (
+              <Badge tone="warning" icon={<IconAlertTriangle className="h-3.5 w-3.5" />}>
+                Sin tipos de equipo: se ofrecen todos los fantasmas
+              </Badge>
+            ) : (
+              productTypes.map((code) => <Tag key={code}>{code}</Tag>)
+            )}
+            <IconButton label="Editar tipos de equipo" onClick={() => setShowProductTypesModal(true)}>
+              <IconEdit className="h-4 w-4" />
+            </IconButton>
           </div>
 
           {/* Leyenda */}
-          <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-            <span className="font-medium">Tipos:</span>
-            <span className="px-2 py-1 bg-amber-50 border border-amber-300 text-amber-800 rounded">
+          <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
+            <span className="font-semibold">Tipos:</span>
+            <span className="px-2 py-1 bg-amber-50 border border-amber-300 text-amber-800 rounded-md">
               Estándar
             </span>
-            <span className="px-2 py-1 bg-orange-400 border border-orange-600 text-white rounded">
+            <span className="px-2 py-1 bg-orange-400 border border-orange-600 text-white rounded-md">
               Crítico
             </span>
-            <span className="px-2 py-1 bg-blue-100 border border-blue-300 text-blue-900 rounded">
+            <span className="px-2 py-1 bg-blue-100 border border-blue-300 text-blue-900 rounded-md">
               Referencia
             </span>
-            <span className="px-2 py-1 bg-violet-50 border-2 border-dashed border-violet-300 text-violet-900 rounded flex items-center gap-1">
+            <span className="px-2 py-1 bg-violet-50 border-2 border-dashed border-violet-300 text-violet-900 rounded-md flex items-center gap-1">
               <IconGhost2 className="h-3 w-3" />
               Familia de fantasmas
             </span>
           </div>
-        </div>
+        </UICard>
 
         <div className="flex gap-4 flex-1 min-h-0">
           {/* Tree area */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-auto">
+          <div className="flex-1 bg-white rounded-[20px] border border-gray-200 overflow-auto">
             <div className="p-4 min-w-max min-h-full">
               <BomTree
                 bomCode={bom.code}
@@ -363,7 +355,7 @@ export const BomEditorPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </Page>
 
       {/* Modals */}
       {showAddNodeModal && (
@@ -455,10 +447,10 @@ export const BomEditorPage = () => {
                 Cancelar
               </Button>
               <Button
-                variant="primary"
+                variant="danger"
                 onClick={confirmDeleteNode}
                 isLoading={deleteMutation.isPending}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                className="flex-1"
               >
                 Eliminar
               </Button>

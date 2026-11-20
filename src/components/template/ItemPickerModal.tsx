@@ -148,8 +148,8 @@ export const ItemPickerModal = ({
                             itemId: row.itemId,
                           })
                         }
-                        className={`cursor-pointer border-t border-gray-100 hover:bg-blue-50 ${
-                          selected ? "bg-blue-100" : ""
+                        className={`cursor-pointer border-t border-gray-100 hover:bg-gray-50 ${
+                          selected ? "bg-rymel-tint" : ""
                         }`}
                       >
                         <td className="px-2 py-1 text-xs text-gray-500">{row.table.name}</td>

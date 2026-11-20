@@ -23,6 +23,8 @@ import type { NavItem, NavSection } from "@rymel/ui";
 interface ItemConfig {
   href: string;
   label: string;
+  /** Línea de ayuda en el menú y en la tarjeta del Dashboard. */
+  description: string;
   icon: ComponentType<{ className?: string }>;
   /** Solo para administradores. */
   adminOnly?: boolean;
@@ -41,20 +43,20 @@ export const SECTIONS: SectionConfig[] = [
     label: "Catálogos",
     icon: IconBoxSeam,
     items: [
-      { href: "/bom", label: "Materiales", icon: IconSitemap },
-      { href: "/semi-finished", label: "Semielaborados", icon: IconPuzzle, adminOnly: true },
-      { href: "/phantom-items", label: "Fantasmas", icon: IconGhost2 },
+      { href: "/bom", label: "Materiales", description: "Estructuras y su árbol de semielaborados", icon: IconSitemap },
+      { href: "/semi-finished", label: "Semielaborados", description: "Catálogo de nodos de las estructuras", icon: IconPuzzle, adminOnly: true },
+      { href: "/phantom-items", label: "Fantasmas", description: "Ítems fantasma por proceso y sus componentes", icon: IconGhost2 },
     ],
   },
   {
     label: "Administración",
     icon: IconUserCog,
     items: [
-      { href: "/users", label: "Usuarios", icon: IconUsers },
-      { href: "/design-code-rules", label: "Reglas de código", icon: IconBarcode, adminOnly: true },
-      { href: "/formulas", label: "Fórmulas", icon: IconMathFunction, adminOnly: true },
-      { href: "/templates", label: "Plantillas", icon: IconFileSpreadsheet, adminOnly: true },
-      { href: "/designs", label: "Diseños", icon: IconFileDescription, adminOnly: true },
+      { href: "/users", label: "Usuarios", description: "Quién entra al sistema y con qué roles", icon: IconUsers },
+      { href: "/design-code-rules", label: "Reglas de código", description: "Tablas que generan el código de diseño", icon: IconBarcode, adminOnly: true },
+      { href: "/formulas", label: "Fórmulas", description: "Fórmulas de diseño y de costo de las hojas", icon: IconMathFunction, adminOnly: true },
+      { href: "/templates", label: "Plantillas", description: "La base sobre la que calculan los diseñadores", icon: IconFileSpreadsheet, adminOnly: true },
+      { href: "/designs", label: "Diseños", description: "Los diseños del cliente, sus hojas y costos", icon: IconFileDescription, adminOnly: true },
     ],
   },
 ];
@@ -75,6 +77,7 @@ export const buildSections = (location: string, isAdmin: boolean): NavSection[] 
       .map((item) => ({
         href: item.href,
         label: item.label,
+        description: item.description,
         icon: iconOf(item.icon),
         active: isUnder(location, item.href),
       }));
