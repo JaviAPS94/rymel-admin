@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Secciones de la barra según el rol
-La barra del admin SHALL ofrecer el Dashboard y dos menús: «Catálogos» (Materiales, Semielaborados, Fantasmas) y «Administración» (Usuarios, Reglas de código, Fórmulas, Plantillas, Diseños). Semielaborados, Reglas de código, Fórmulas, Plantillas y Diseños SHALL mostrarse solo a usuarios con rol `ADMIN`.
+La barra del admin SHALL ofrecer el Dashboard y dos menús: «Catálogos» (Listados de materiales, Semielaborados, Fantasmas) y «Administración» (Usuarios, Reglas de código, Fórmulas, Plantillas, Diseños). Semielaborados, Reglas de código, Fórmulas, Plantillas y Diseños SHALL mostrarse solo a usuarios con rol `ADMIN`.
 
 #### Scenario: Usuario ADMIN
 - **WHEN** entra un usuario con rol `ADMIN`
-- **THEN** «Catálogos» lista Materiales, Semielaborados y Fantasmas, y «Administración» lista Usuarios, Reglas de código, Fórmulas, Plantillas y Diseños
+- **THEN** «Catálogos» lista Listados de materiales, Semielaborados y Fantasmas, y «Administración» lista Usuarios, Reglas de código, Fórmulas, Plantillas y Diseños
 
 #### Scenario: Usuario sin rol ADMIN
 - **WHEN** entra un usuario sin rol `ADMIN`
-- **THEN** «Catálogos» lista Materiales y Fantasmas, y «Administración» lista solo Usuarios
+- **THEN** «Catálogos» lista Listados de materiales y Fantasmas, y «Administración» lista solo Usuarios
 
 ### Requirement: Solo enlaces con destino
 La barra MUST NOT ofrecer enlaces a rutas que la aplicación no tiene. «Recursos» (`/resources`) y «Configuración» (`/settings`) SHALL desaparecer de la barra.
@@ -23,11 +23,11 @@ La barra MUST NOT ofrecer enlaces a rutas que la aplicación no tiene. «Recurso
 - **THEN** su destino es una ruta declarada en `App.tsx`
 
 ### Requirement: Sección activa
-La barra SHALL marcar como activa la sección o el menú que contiene la pantalla actual, incluidas las pantallas de detalle bajo su ruta (p. ej. `/bom/12` enciende «Catálogos» y su ítem Materiales).
+La barra SHALL marcar como activa la sección o el menú que contiene la pantalla actual, incluidas las pantallas de detalle bajo su ruta (p. ej. `/bom/12` enciende «Catálogos» y su ítem Listados de materiales).
 
 #### Scenario: Detalle de una estructura
 - **WHEN** la ruta actual es `/bom/12`
-- **THEN** el menú «Catálogos» se muestra activo y, al abrirlo, Materiales aparece marcado
+- **THEN** el menú «Catálogos» se muestra activo y, al abrirlo, Listados de materiales aparece marcado
 
 ### Requirement: Identidad y sesión
 La barra SHALL mostrar la marca «Rymel Admin» enlazada al Dashboard y un menú de cuenta con el nombre o correo del usuario, sus roles y la acción «Cerrar sesión».

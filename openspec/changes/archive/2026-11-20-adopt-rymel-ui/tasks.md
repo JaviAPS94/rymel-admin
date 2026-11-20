@@ -52,4 +52,4 @@
 ## 7. Cierre
 
 - [x] 7.1 `npm test`, `tsc -b` y `npm run build` en verde
-- [ ] 7.2 Revisión visual de todas las pantallas (escritorio y móvil) contra el cliente
+- [x] 7.2 Revisión visual de todas las pantallas (escritorio y móvil) contra el cliente — hecha por el equipo con sesión
