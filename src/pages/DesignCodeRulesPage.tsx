@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@components/Layout";
+import { Badge, Card as UICard, Page, PageHeader } from "@rymel/ui";
 import { DesignCodeRuleSection } from "@components/DesignCodeRuleSection";
 import {
   usePowerLetters,
@@ -67,33 +68,37 @@ export const DesignCodeRulesPage = () => {
   const [activeTab, setActiveTab] = useState<TabId>("power");
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Reglas de Código de Diseño
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Administra las tablas que alimentan la generación automática del
-            código de diseño
-          </p>
-        </div>
+    <Layout bare>
+      <PageHeader
+        eyebrow="Administración"
+        title="Reglas de código"
+        description="Las tablas que alimentan la generación automática del código de diseño."
+      />
 
-        <div className="flex flex-wrap gap-1 border-b border-gray-200">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                activeTab === tab.id
-                  ? "bg-rymel-blue text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <Page>
+        <UICard padded={false} className="overflow-hidden">
+          <div role="tablist" aria-label="Reglas" className="flex gap-1 overflow-x-auto px-5">
+            {TABS.map((tab) => {
+              const selected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`h-[60px] cursor-pointer whitespace-nowrap border-0 border-b-[3px] border-solid bg-transparent px-4 text-[15px] transition-colors ${
+                    selected
+                      ? "border-rymel-blue font-bold text-rymel-blue"
+                      : "border-transparent font-semibold text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </UICard>
 
         {activeTab === "power" && (
           <DesignCodeRuleSection
@@ -248,9 +253,9 @@ export const DesignCodeRulesPage = () => {
                 label: "Predeterminado",
                 render: (row) =>
                   row.isDefault ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                    <Badge tone="success" dot>
                       Predeterminado
-                    </span>
+                    </Badge>
                   ) : (
                     "-"
                   ),
@@ -264,7 +269,7 @@ export const DesignCodeRulesPage = () => {
             }}
           />
         )}
-      </div>
+      </Page>
     </Layout>
   );
 };

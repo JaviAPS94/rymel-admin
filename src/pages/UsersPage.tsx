@@ -7,21 +7,50 @@ import {
   IconSearch,
 } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
-import { Input } from "@components/ui/Input";
 import { Select } from "@components/ui/Select";
 import { Modal } from "@components/ui/Modal";
-import { Pagination } from "@components/ui/Pagination";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@components/ui/Card";
+  Badge,
+  Button as UIButton,
+  Card as UICard,
+  EmptyState,
+  FilterField,
+  IconButton,
+  Input as UIInput,
+  Page,
+  PageHeader,
+  Pagination as UIPagination,
+  TableCard,
+  TitleCell,
+} from "@rymel/ui";
 import { useUsers, useToggleUserStatus } from "@hooks/useUsers";
 import { UserFormModal } from "@components/UserFormModal";
 import { Layout } from "@components/Layout";
+import { FilterSlot } from "@components/ui/FilterSlot";
 import { Role, type User } from "@/types/user.types";
+
+const PAGE_SIZE = 10;
+
+const ROLE_LABELS: Record<string, string> = {
+  [Role.ADMIN]: "Administrador",
+  [Role.USER]: "Usuario",
+  [Role.NORM]: "Norma",
+  [Role.DESIGN]: "Diseño",
+};
+
+const ROLE_OPTIONS = [
+  { value: "all", label: "Todos los roles" },
+  ...Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label })),
+];
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "Todos los estados" },
+  { value: "active", label: "Activo" },
+  { value: "inactive", label: "Inactivo" },
+];
+
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" });
 
 export const UsersPage = () => {
   const [page, setPage] = useState(1);
@@ -33,7 +62,7 @@ export const UsersPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [userToToggle, setUserToToggle] = useState<User | null>(null);
 
-  const { data: usersData, isLoading, error } = useUsers(page, 10);
+  const { data: usersData, isLoading, error } = useUsers(page, PAGE_SIZE);
   const toggleStatusMutation = useToggleUserStatus();
 
   const handleCreateUser = () => {
@@ -72,285 +101,224 @@ export const UsersPage = () => {
       return matchesSearch && matchesRole && matchesStatus;
     }) || [];
 
+  const hasFilters = selectedRole !== "all" || selectedStatus !== "all";
+  const total = usersData?.total ?? 0;
+
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Gestión de Usuarios
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Administra los usuarios del sistema
-            </p>
+    <Layout bare>
+      <PageHeader
+        eyebrow="Administración"
+        title="Usuarios"
+        description={
+          usersData ? (
+            <>
+              <strong>
+                {total} {total === 1 ? "usuario" : "usuarios"}
+              </strong>{" "}
+              con acceso al sistema.
+            </>
+          ) : (
+            "Quién entra al sistema y con qué roles."
+          )
+        }
+        actions={
+          <UIButton
+            variant="light"
+            size="lg"
+            icon={<IconUserPlus className="h-[18px] w-[18px]" />}
+            onClick={handleCreateUser}
+          >
+            Nuevo usuario
+          </UIButton>
+        }
+      />
+
+      <Page>
+        <UICard as="form" role="search" aria-label="Filtrar usuarios" onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <FilterField label="Buscar" className="flex-[2_1_280px]">
+              <UIInput
+                type="search"
+                placeholder="Buscar por email…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClear={() => setSearchTerm("")}
+                leftIcon={<IconSearch className="h-[18px] w-[18px]" />}
+              />
+            </FilterField>
+            <FilterSlot label="Rol">
+              <Select
+                value={selectedRole}
+                onChange={(value) => setSelectedRole(value as Role | "all")}
+                options={ROLE_OPTIONS}
+              />
+            </FilterSlot>
+            <FilterSlot label="Estado">
+              <Select
+                value={selectedStatus}
+                onChange={setSelectedStatus}
+                options={STATUS_OPTIONS}
+              />
+            </FilterSlot>
           </div>
-          <Button variant="primary" onClick={handleCreateUser}>
-            <IconUserPlus className="h-5 w-5 mr-2" />
-            Nuevo Usuario
-          </Button>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Usuarios</CardTitle>
-            <CardDescription>
-              Total: {usersData?.total || 0} usuarios
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6 space-y-4">
-              <div className="relative">
-                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filtrar por Rol
-                  </label>
-                  <Select
-                    value={selectedRole}
-                    onChange={(value) => setSelectedRole(value as Role | "all")}
-                    options={[
-                      { value: "all", label: "Todos los roles" },
-                      { value: Role.ADMIN, label: "Administrador" },
-                      { value: Role.USER, label: "Usuario" },
-                      { value: Role.NORM, label: "Norma" },
-                      { value: Role.DESIGN, label: "Diseño" },
-                    ]}
-                  />
-                </div>
-
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filtrar por Estado
-                  </label>
-                  <Select
-                    value={selectedStatus}
-                    onChange={setSelectedStatus}
-                    options={[
-                      { value: "all", label: "Todos los estados" },
-                      { value: "active", label: "Activo" },
-                      { value: "inactive", label: "Inactivo" },
-                    ]}
-                  />
-                </div>
-
-                {(selectedRole !== "all" || selectedStatus !== "all") && (
-                  <div className="flex items-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedRole("all");
-                        setSelectedStatus("all");
-                      }}
-                    >
-                      Limpiar filtros
-                    </Button>
-                  </div>
-                )}
-              </div>
-
+          {(hasFilters || filteredUsers.length !== usersData?.users.length) && (
+            <div className="flex flex-wrap items-center gap-2.5 border-t border-gray-200 pt-3.5 text-[13px] text-gray-600">
               {filteredUsers.length !== usersData?.users.length && (
-                <p className="text-sm text-gray-600">
-                  Mostrando {filteredUsers.length} de {usersData?.users.length}{" "}
-                  usuarios
-                </p>
+                <span>
+                  Mostrando <strong className="text-gray-900">{filteredUsers.length}</strong> de{" "}
+                  <strong className="text-gray-900">{usersData?.users.length}</strong> en esta página
+                </span>
+              )}
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedRole("all");
+                    setSelectedStatus("all");
+                  }}
+                  className="ml-auto cursor-pointer border-0 bg-transparent font-semibold text-rymel-indigo hover:text-rymel-blue hover:underline"
+                >
+                  Limpiar filtros
+                </button>
               )}
             </div>
+          )}
+        </UICard>
 
-            {isLoading && (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Cargando usuarios...</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                Error al cargar usuarios
-              </div>
-            )}
-
-            {!isLoading && !error && (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                        Email
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                        Roles
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                        Estado
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                        Fecha Creación
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                        Fecha Actualización
-                      </th>
-                      <th className="text-right py-3 px-4 font-semibold text-gray-700">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="text-center py-8 text-gray-500"
-                        >
-                          No se encontraron usuarios
-                        </td>
-                      </tr>
-                    )}
-                    {filteredUsers.map((user) => (
-                      <tr
-                        key={user.id}
-                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-3 px-4 text-gray-600">
-                          {user.email}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-1 flex-wrap">
-                            {user.roles?.map((role) => {
-                              const roleLabels: Record<string, string> = {
-                                [Role.ADMIN]: "Administrador",
-                                [Role.USER]: "Usuario",
-                                [Role.NORM]: "Norma",
-                                [Role.DESIGN]: "Diseño",
-                              };
-                              return (
-                                <span
-                                  key={role}
-                                  className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
-                                >
-                                  {roleLabels[role] || role}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              user.status === "active"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {user.status === "active" ? "Activo" : "Inactivo"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-left text-gray-600 text-sm">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4 text-left text-gray-600 text-sm">
-                          {new Date(user.updatedAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleToggleStatus(user)}
-                              className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title={
-                                user.status === "active"
-                                  ? "Desactivar"
-                                  : "Activar"
-                              }
-                            >
-                              {user.status === "active" ? (
-                                <IconUserX className="h-5 w-5" />
-                              ) : (
-                                <IconUserCheck className="h-5 w-5" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleEditUser(user)}
-                              className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Editar"
-                            >
-                              <IconEdit className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <Pagination
-              currentPage={page}
-              totalPages={Math.ceil((usersData?.total || 0) / 10)}
-              onPageChange={setPage}
-            />
-          </CardContent>
-        </Card>
-
-        {showModal && (
-          <UserFormModal
-            user={selectedUser}
-            onClose={() => setShowModal(false)}
-          />
-        )}
-
-        {showConfirmModal && userToToggle && (
-          <Modal
-            isOpen={showConfirmModal}
-            onClose={() => {
-              setShowConfirmModal(false);
-              setUserToToggle(null);
-            }}
-            title={
-              userToToggle.status === "active"
-                ? "Desactivar Usuario"
-                : "Activar Usuario"
+        {isLoading ? (
+          <p className="text-sm text-gray-600">Cargando usuarios…</p>
+        ) : error ? (
+          <EmptyState tone="error" title="Error al cargar usuarios" />
+        ) : (
+          <TableCard
+            aria-label="Usuarios"
+            minWidth={880}
+            footer={
+              Math.ceil(total / PAGE_SIZE) > 1 ? (
+                <UIPagination
+                  page={page}
+                  totalPages={Math.ceil(total / PAGE_SIZE)}
+                  onPageChange={setPage}
+                  totalItems={total}
+                  pageSize={PAGE_SIZE}
+                />
+              ) : undefined
             }
           >
-            <div className="space-y-6">
-              <p className="text-gray-600">
-                ¿Estás seguro de que deseas{" "}
-                {userToToggle.status === "active" ? "desactivar" : "activar"} al
-                usuario <strong>{userToToggle.email}</strong>?
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowConfirmModal(false);
-                    setUserToToggle(null);
-                  }}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={confirmToggleStatus}
-                  isLoading={toggleStatusMutation.isPending}
-                  className="flex-1"
-                >
-                  Confirmar
-                </Button>
-              </div>
-            </div>
-          </Modal>
+            <table className="rm-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Roles</th>
+                  <th>Estado</th>
+                  <th>Creado</th>
+                  <th>Actualizado</th>
+                  <th>
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-gray-600">
+                      No se encontraron usuarios
+                    </td>
+                  </tr>
+                )}
+                {filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <TitleCell
+                        icon={user.email.charAt(0).toUpperCase()}
+                        title={user.email.split("@")[0]}
+                        code={user.email}
+                      />
+                    </td>
+                    <td>
+                      <div className="flex flex-wrap gap-1.5">
+                        {user.roles?.map((role) => (
+                          <Badge key={role} tone="brand">
+                            {ROLE_LABELS[role] || role}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <Badge tone={user.status === "active" ? "success" : "danger"} dot>
+                        {user.status === "active" ? "Activo" : "Inactivo"}
+                      </Badge>
+                    </td>
+                    <td className="whitespace-nowrap text-gray-600">{formatDate(user.createdAt)}</td>
+                    <td className="whitespace-nowrap text-gray-600">{formatDate(user.updatedAt)}</td>
+                    <td data-align="right">
+                      <div className="flex items-center justify-end gap-2">
+                        <IconButton
+                          label={user.status === "active" ? "Desactivar" : "Activar"}
+                          tone={user.status === "active" ? "danger" : "neutral"}
+                          onClick={() => handleToggleStatus(user)}
+                        >
+                          {user.status === "active" ? (
+                            <IconUserX className="h-[18px] w-[18px]" />
+                          ) : (
+                            <IconUserCheck className="h-[18px] w-[18px]" />
+                          )}
+                        </IconButton>
+                        <IconButton label="Editar" onClick={() => handleEditUser(user)}>
+                          <IconEdit className="h-[18px] w-[18px]" />
+                        </IconButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableCard>
         )}
-      </div>
+      </Page>
+
+      {showModal && (
+        <UserFormModal user={selectedUser} onClose={() => setShowModal(false)} />
+      )}
+
+      {showConfirmModal && userToToggle && (
+        <Modal
+          isOpen={showConfirmModal}
+          onClose={() => {
+            setShowConfirmModal(false);
+            setUserToToggle(null);
+          }}
+          title={userToToggle.status === "active" ? "Desactivar usuario" : "Activar usuario"}
+        >
+          <div className="space-y-6">
+            <p className="text-gray-600">
+              ¿Estás seguro de que deseas{" "}
+              {userToToggle.status === "active" ? "desactivar" : "activar"} al usuario{" "}
+              <strong>{userToToggle.email}</strong>?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setUserToToggle(null);
+                }}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant={userToToggle.status === "active" ? "danger" : "primary"}
+                onClick={confirmToggleStatus}
+                isLoading={toggleStatusMutation.isPending}
+                className="flex-1"
+              >
+                Confirmar
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Layout>
   );
 };

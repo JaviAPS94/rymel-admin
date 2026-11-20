@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconButton } from "@rymel/ui";
 
 export interface RuleColumn {
   key: string;
@@ -31,76 +32,51 @@ export const DesignCodeRuleTable = ({
 }: DesignCodeRuleTableProps) => {
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Cargando...</p>
-      </div>
+      <p className="m-0 px-5 py-8 text-sm text-gray-600 sm:px-8">Cargando…</p>
     );
   }
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="rm-table min-w-[560px]">
         <thead>
-          <tr className="border-b border-gray-200">
+          <tr>
             {columns.map((column) => (
-              <th
-                key={column.key}
-                className="text-left py-3 px-4 font-semibold text-gray-700"
-              >
-                {column.label}
-              </th>
+              <th key={column.key}>{column.label}</th>
             ))}
-            <th className="text-right py-3 px-4 font-semibold text-gray-700">
-              Acciones
+            <th>
+              <span className="sr-only">Acciones</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td
-                colSpan={columns.length + 1}
-                className="text-center py-8 text-gray-500"
-              >
+              <td colSpan={columns.length + 1} className="py-8 text-center text-gray-600">
                 Sin registros
               </td>
             </tr>
           )}
           {rows.map((row) => (
-            <tr
-              key={row.id}
-              className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >
+            <tr key={row.id}>
               {columns.map((column) => (
-                <td key={column.key} className="py-3 px-4 text-gray-600">
+                <td key={column.key}>
                   {column.render ? column.render(row) : String(row[column.key])}
                 </td>
               ))}
-              <td className="py-3 px-4">
+              <td data-align="right">
                 <div className="flex items-center justify-end gap-2">
                   {extraRowAction && extraRowAction.isVisible(row) && (
-                    <button
-                      onClick={() => extraRowAction.onClick(row)}
-                      className="p-2 text-gray-600 hover:text-rymel-blue hover:bg-blue-50 rounded-lg transition-colors"
-                      title={extraRowAction.label}
-                    >
-                      <extraRowAction.icon className="h-5 w-5" />
-                    </button>
+                    <IconButton label={extraRowAction.label} onClick={() => extraRowAction.onClick(row)}>
+                      <extraRowAction.icon className="h-[18px] w-[18px]" />
+                    </IconButton>
                   )}
-                  <button
-                    onClick={() => onEdit(row)}
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Editar"
-                  >
-                    <IconEdit className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => onDelete(row)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar"
-                  >
-                    <IconTrash className="h-5 w-5" />
-                  </button>
+                  <IconButton label="Editar" onClick={() => onEdit(row)}>
+                    <IconEdit className="h-[18px] w-[18px]" />
+                  </IconButton>
+                  <IconButton label="Eliminar" tone="danger" onClick={() => onDelete(row)}>
+                    <IconTrash className="h-[18px] w-[18px]" />
+                  </IconButton>
                 </div>
               </td>
             </tr>

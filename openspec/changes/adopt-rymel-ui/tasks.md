@@ -32,15 +32,15 @@
 
 ## 5. Admin: listados
 
-- [ ] 5.1 Usuarios
-- [ ] 5.2 Materiales (`BomListPage`)
-- [ ] 5.3 Diseños (`DesignListPage`)
-- [ ] 5.4 Fórmulas
-- [ ] 5.5 Plantillas
-- [ ] 5.6 Semielaborados
-- [ ] 5.7 Fantasmas
-- [ ] 5.8 Reglas de código
-- [ ] 5.9 Pruebas de páginas en verde
+- [x] 5.1 Usuarios
+- [x] 5.2 Materiales (`BomListPage`)
+- [x] 5.3 Diseños (`DesignListPage`)
+- [x] 5.4 Fórmulas
+- [x] 5.5 Plantillas
+- [x] 5.6 Semielaborados
+- [x] 5.7 Fantasmas
+- [x] 5.8 Reglas de código
+- [x] 5.9 Pruebas de páginas en verde
 
 ## 6. Admin: detalle, editores y Dashboard (solo marco)
 

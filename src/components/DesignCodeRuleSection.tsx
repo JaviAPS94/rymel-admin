@@ -2,13 +2,7 @@ import { useState } from "react";
 import { IconPlus, IconStar } from "@tabler/icons-react";
 import { Button } from "@components/ui/Button";
 import { Modal } from "@components/ui/Modal";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@components/ui/Card";
+import { Notice, SectionCard } from "@rymel/ui";
 import {
   DesignCodeRuleFormModal,
   type RuleFieldConfig,
@@ -115,23 +109,21 @@ export const DesignCodeRuleSection = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-          <Button variant="primary" size="sm" onClick={handleCreate}>
-            <IconPlus className="h-4 w-4 mr-2" />
-            {newButtonLabel}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <>
+    <SectionCard
+      title={title}
+      description={description}
+      flush
+      actions={
+        <Button variant="primary" onClick={handleCreate}>
+          <IconPlus className="h-4 w-4" />
+          {newButtonLabel}
+        </Button>
+      }
+    >
         {Boolean(error) && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            Error al cargar las reglas
+          <div className="px-5 pt-5 sm:px-8">
+            <Notice tone="danger">Error al cargar las reglas</Notice>
           </div>
         )}
 
@@ -152,7 +144,7 @@ export const DesignCodeRuleSection = ({
               : undefined
           }
         />
-      </CardContent>
+    </SectionCard>
 
       {showFormModal && (
         <DesignCodeRuleFormModal
@@ -186,7 +178,7 @@ export const DesignCodeRuleSection = ({
                 Cancelar
               </Button>
               <Button
-                variant="primary"
+                variant="danger"
                 onClick={confirmDelete}
                 isLoading={removeMutation.isPending}
                 className="flex-1"
@@ -228,6 +220,6 @@ export const DesignCodeRuleSection = ({
           </div>
         </Modal>
       )}
-    </Card>
+    </>
   );
 };
