@@ -29,7 +29,7 @@ const BomTutorial: React.FC = () => {
     {
       title: "Lista de materiales en 5 pasos",
       description:
-        "Aprende a configurar en la plantilla la lista de materiales (BOM) a partir de tus zonas semi-terminado, un catálogo etiquetado y condiciones por celda. Cada diseño creado con la plantilla la calcula con sus propios valores.",
+        "Aprende a configurar en la plantilla la lista de materiales a partir de tus zonas semi-terminado, un catálogo etiquetado y condiciones por celda. Cada diseño creado con la plantilla la calcula con sus propios valores.",
       render: () => <SceneIntro />,
     },
     {
@@ -59,7 +59,7 @@ const BomTutorial: React.FC = () => {
     {
       title: "Paso 5 · Generar la lista de materiales",
       description:
-        'Panel "Materiales" a la derecha: elige la estructura BOM y pulsa "Generar lista de materiales". Se crea una hoja con todos los semi-terminados, sus materiales agrupados y las familias de fantasmas de la estructura; cantidad, descripción y unidad apuntan a las celdas de la plantilla.',
+        'Panel "Materiales" a la derecha: elige el listado de materiales y pulsa "Generar lista de materiales". Se crea una hoja con todos los semi-terminados, sus materiales agrupados y las familias de fantasmas del listado; cantidad, descripción y unidad apuntan a las celdas de la plantilla.',
       render: () => <SceneBom />,
     },
     {
@@ -675,7 +675,7 @@ const SceneBom: React.FC = () => (
         Materiales
       </div>
       <div className="px-2 py-1 bg-white border border-gray-300 rounded text-[10px] text-gray-700">
-        Estructura BOM: <span className="font-mono">1-25-220-120</span>
+        Listado de materiales: <span className="font-mono">1-25-220-120</span>
       </div>
       <div
         className="px-2 py-1 text-[10px] font-semibold bg-cyan-600 text-white rounded anim-pulse-glow"

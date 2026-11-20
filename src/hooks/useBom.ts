@@ -34,10 +34,10 @@ export const useCreateBom = () => {
     mutationFn: (data: CreateBomDto) => bomService.createBom(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boms'] });
-      toast.success('BOM creado exitosamente');
+      toast.success('Listado de materiales creado');
     },
     onError: () => {
-      toast.error('Error al crear el BOM');
+      toast.error('Error al crear el listado de materiales');
     },
   });
 };
@@ -50,10 +50,10 @@ export const useUpdateBom = () => {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['boms'] });
       queryClient.invalidateQueries({ queryKey: ['bom', id] });
-      toast.success('BOM actualizado exitosamente');
+      toast.success('Listado de materiales actualizado');
     },
     onError: () => {
-      toast.error('Error al actualizar el BOM');
+      toast.error('Error al actualizar el listado de materiales');
     },
   });
 };
@@ -64,10 +64,10 @@ export const useDeleteBom = () => {
     mutationFn: (id: number) => bomService.deleteBom(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boms'] });
-      toast.success('BOM eliminado exitosamente');
+      toast.success('Listado de materiales eliminado');
     },
     onError: () => {
-      toast.error('Error al eliminar el BOM');
+      toast.error('Error al eliminar el listado de materiales');
     },
   });
 };

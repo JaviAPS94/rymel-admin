@@ -152,7 +152,7 @@ export const BomEditorPage = () => {
   if (isLoading) {
     return (
       <Layout bare>
-        <PageHeader back={{ label: 'Materiales', href: '/bom' }} title="Cargando estructura…" />
+        <PageHeader back={{ label: 'Listados de materiales', href: '/bom' }} title="Cargando listado de materiales…" />
         <Page>
           <div className="h-40 animate-pulse rounded-[20px] border border-gray-200 bg-white" />
         </Page>
@@ -163,9 +163,9 @@ export const BomEditorPage = () => {
   if (error || !bom) {
     return (
       <Layout bare>
-        <PageHeader back={{ label: 'Materiales', href: '/bom' }} title="No se pudo cargar la estructura" />
+        <PageHeader back={{ label: 'Listados de materiales', href: '/bom' }} title="No se pudo cargar el listado de materiales" />
         <Page>
-          <EmptyState tone="error" title="Error al cargar la estructura" />
+          <EmptyState tone="error" title="Error al cargar el listado de materiales" />
         </Page>
       </Layout>
     );
@@ -184,7 +184,7 @@ export const BomEditorPage = () => {
     <Layout bare>
       <PageHeader
         icon={<IconSitemap />}
-        back={{ label: 'Materiales', onClick: () => navigate('/bom') }}
+        back={{ label: 'Listados de materiales', onClick: () => navigate('/bom') }}
         title={bom.name}
         meta={<HeaderChip mono>{bom.code}</HeaderChip>}
         actions={
@@ -193,7 +193,7 @@ export const BomEditorPage = () => {
             icon={<IconEdit className="h-[18px] w-[18px]" />}
             onClick={() => setShowEditBomModal(true)}
           >
-            Editar estructura
+            Editar listado
           </UIButton>
         }
       />

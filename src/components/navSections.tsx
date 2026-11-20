@@ -43,8 +43,8 @@ export const SECTIONS: SectionConfig[] = [
     label: "Catálogos",
     icon: IconBoxSeam,
     items: [
-      { href: "/bom", label: "Materiales", description: "Estructuras y su árbol de semielaborados", icon: IconSitemap },
-      { href: "/semi-finished", label: "Semielaborados", description: "Catálogo de nodos de las estructuras", icon: IconPuzzle, adminOnly: true },
+      { href: "/bom", label: "Listados de materiales", description: "Cada uno con su árbol de semielaborados", icon: IconSitemap },
+      { href: "/semi-finished", label: "Semielaborados", description: "Catálogo de nodos de los listados de materiales", icon: IconPuzzle, adminOnly: true },
       { href: "/phantom-items", label: "Fantasmas", description: "Ítems fantasma por proceso y sus componentes", icon: IconGhost2 },
     ],
   },

@@ -80,7 +80,7 @@ describe("BomBasePanel", () => {
     const onSetBomSheet = renderPanel(doc([HOJA]));
     expect(screen.getByText(/todavía no tiene lista de materiales/)).toBeTruthy();
     await screen.findByRole("option", { name: /1-25-220-120/ });
-    fireEvent.change(screen.getByLabelText("Estructura BOM"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("Listado de materiales"), { target: { value: "2" } });
     fireEvent.click(screen.getByRole("button", { name: "Generar lista de materiales" }));
 
     await waitFor(() => expect(onSetBomSheet).toHaveBeenCalled());
@@ -102,7 +102,7 @@ describe("BomBasePanel", () => {
     });
     const onSetBomSheet = renderPanel(doc([HOJA]));
     await screen.findByRole("option", { name: /1-25-220-120/ });
-    fireEvent.change(screen.getByLabelText("Estructura BOM"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("Listado de materiales"), { target: { value: "2" } });
     fireEvent.click(screen.getByRole("button", { name: "Generar lista de materiales" }));
 
     await waitFor(() => expect(onSetBomSheet).toHaveBeenCalled());

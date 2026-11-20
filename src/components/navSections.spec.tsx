@@ -20,15 +20,15 @@ describe("secciones de la barra", () => {
   it("un ADMIN ve todos los catálogos y toda la administración", () => {
     expect(labels("/dashboard", true)).toEqual({
       Dashboard: [],
-      Catálogos: ["Materiales", "Semielaborados", "Fantasmas"],
+      Catálogos: ["Listados de materiales", "Semielaborados", "Fantasmas"],
       Administración: ["Usuarios", "Reglas de código", "Fórmulas", "Plantillas", "Diseños"],
     });
   });
 
-  it("sin rol ADMIN solo quedan Materiales, Fantasmas y Usuarios", () => {
+  it("sin rol ADMIN solo quedan Listados de materiales, Fantasmas y Usuarios", () => {
     expect(labels("/dashboard", false)).toEqual({
       Dashboard: [],
-      Catálogos: ["Materiales", "Fantasmas"],
+      Catálogos: ["Listados de materiales", "Fantasmas"],
       Administración: ["Usuarios"],
     });
   });
@@ -55,7 +55,7 @@ describe("secciones de la barra", () => {
     const sections = buildSections("/bom/12", true);
     const catalogs = sections.find((section) => section.label === "Catálogos")!;
     expect(catalogs.active).toBe(true);
-    expect(catalogs.items!.find((item) => item.label === "Materiales")!.active).toBe(true);
+    expect(catalogs.items!.find((item) => item.label === "Listados de materiales")!.active).toBe(true);
     expect(sections.find((section) => section.label === "Administración")!.active).toBe(false);
   });
 

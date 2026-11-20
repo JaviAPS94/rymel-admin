@@ -49,7 +49,7 @@ export const BomFormModal = ({ bom, onClose }: BomFormModalProps) => {
     <Modal
       isOpen={true}
       onClose={onClose}
-      title={bom ? 'Editar BOM' : 'Nuevo BOM'}
+      title={bom ? 'Editar listado de materiales' : 'Nuevo listado de materiales'}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">

@@ -66,13 +66,13 @@ export const BomListPage = () => {
     <Layout bare>
       <PageHeader
         eyebrow="Catálogos"
-        title="Materiales"
+        title="Listados de materiales"
         description={
           <>
             <strong>
-              {total} {total === 1 ? "estructura" : "estructuras"}
+              {total} {total === 1 ? "listado" : "listados"}
             </strong>{" "}
-            de materiales con su árbol jerárquico.
+            de materiales, cada uno con su árbol de semielaborados.
           </>
         }
         actions={
@@ -82,7 +82,7 @@ export const BomListPage = () => {
             icon={<IconPlus className="h-[18px] w-[18px]" />}
             onClick={handleCreate}
           >
-            Nueva estructura
+            Nuevo listado
           </UIButton>
         }
       />
@@ -93,10 +93,10 @@ export const BomListPage = () => {
             <p className="m-0 text-sm text-gray-600">Cargando…</p>
           </UICard>
         ) : error ? (
-          <EmptyState tone="error" title="Error al cargar las estructuras" />
+          <EmptyState tone="error" title="Error al cargar los listados de materiales" />
         ) : (
           <TableCard
-            aria-label="Estructuras de materiales"
+            aria-label="Listados de materiales"
             minWidth={720}
             footer={
               totalPages > 1 ? (
@@ -113,7 +113,7 @@ export const BomListPage = () => {
             <table className="rm-table">
               <thead>
                 <tr>
-                  <th>Estructura</th>
+                  <th>Listado de materiales</th>
                   <th>Creado</th>
                   <th>
                     <span className="sr-only">Acciones</span>
@@ -124,7 +124,7 @@ export const BomListPage = () => {
                 {boms.length === 0 && (
                   <tr>
                     <td colSpan={3} className="py-10 text-center text-gray-600">
-                      No hay estructuras creadas aún
+                      No hay listados de materiales creados aún
                     </td>
                   </tr>
                 )}
@@ -176,10 +176,10 @@ export const BomListPage = () => {
       {showModal && <BomFormModal bom={selectedBom} onClose={() => setShowModal(false)} />}
 
       {bomToDelete && (
-        <Modal isOpen={true} onClose={() => setBomToDelete(null)} title="Eliminar estructura">
+        <Modal isOpen={true} onClose={() => setBomToDelete(null)} title="Eliminar listado de materiales">
           <div className="space-y-6">
             <p className="text-gray-600">
-              ¿Estás seguro de que deseas eliminar la estructura{" "}
+              ¿Estás seguro de que deseas eliminar el listado de materiales{" "}
               <strong>{bomToDelete.code}</strong>? Esta acción también eliminará todos los nodos
               asociados.
             </p>

@@ -434,7 +434,7 @@ const BomView = ({ bom }: { bom: ReturnType<typeof useDesignBom> }) => {
       </p>
       {state.adjustment && state.changedSinceAdjustment && (
         <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-          La lista generada cambió desde que el cliente hizo estos ajustes (estructura BOM, hojas del
+          La lista generada cambió desde que el cliente hizo estos ajustes (listado de materiales, hojas del
           diseño, accesorios o catálogo).
         </p>
       )}
