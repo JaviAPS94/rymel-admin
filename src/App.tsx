@@ -1,5 +1,6 @@
 import { Route, Switch, Redirect } from "wouter";
 import { Toaster } from "sonner";
+import { toastOptions } from "@rymel/ui";
 import { LoginPage } from "@pages/LoginPage";
 import { DashboardPage } from "@pages/DashboardPage";
 import { UsersPage } from "@pages/UsersPage";
@@ -115,7 +116,7 @@ const App = () => {
         </Route>
       </Switch>
 
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" toastOptions={toastOptions} />
     </>
   );
 };

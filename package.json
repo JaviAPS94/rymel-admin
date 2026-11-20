@@ -13,6 +13,7 @@
   "dependencies": {
     "@rymel/design-template": "github:JaviAPS94/rymel-design-template#v2.6.0",
     "@rymel/formula-engine": "github:JaviAPS94/rymel-formula-engine#v1.8.0",
+    "@rymel/ui": "github:JaviAPS94/rymel-ui#v0.2.0",
     "@tabler/icons-react": "^3.35.0",
     "@tailwindcss/vite": "^4.1.17",
     "@tanstack/react-query": "^5.90.11",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",

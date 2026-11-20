@@ -7,19 +7,19 @@
 
 ## 2. Admin: base
 
-- [ ] 2.1 Dependencia `@rymel/ui#v0.2.0` en `package.json`
-- [ ] 2.2 `src/index.css`: `@import "@rymel/ui/theme.css"`, quitar el `@theme` propio, `body` con `bg-surface font-sans text-gray-900`
-- [ ] 2.3 Fuentes de marca en `index.html`
-- [ ] 2.4 `RymelUIProvider` con el `Link` de wouter en `src/main.tsx`
-- [ ] 2.5 Sustituir los 2 usos de tokens heredados (`muted`, `foreground`…) por la escala de grises
+- [x] 2.1 Dependencia `@rymel/ui#v0.2.0` en `package.json`
+- [x] 2.2 `src/index.css`: `@import "@rymel/ui/theme.css"`, quitar el `@theme` propio, `body` con `bg-surface font-sans text-gray-900`
+- [x] 2.3 Fuentes de marca en `index.html`
+- [x] 2.4 `RymelUIProvider` con el `Link` de wouter en `src/main.tsx`
+- [x] 2.5 Sustituir los 2 usos de tokens heredados (`muted`, `foreground`…) por la escala de grises
 
 ## 3. Admin: adaptadores de `src/components/ui`
 
-- [ ] 3.1 `Button` sobre el paquete: `secondary`→`accent`, `outline`→`secondary`, `isLoading`→`loading`
-- [ ] 3.2 `Modal` sobre el paquete (traducción de `maxWidth`, `showCloseButton`); `Modal.spec.tsx` en verde sin cambios
-- [ ] 3.3 `Input` (con `error`), `Select`, `Pagination` y `Card` (con sus subpartes) sobre el paquete
-- [ ] 3.4 `Toaster` de `sonner` con las clases de marca
-- [ ] 3.5 `npm test` y `tsc -b` en verde
+- [x] 3.1 `Button` sobre el paquete: `secondary`→`accent`, `outline`→`secondary`, `isLoading`→`loading`
+- [x] 3.2 `Modal` sobre el paquete (traducción de `maxWidth`, `showCloseButton`); `Modal.spec.tsx` en verde sin cambios
+- [x] 3.3 `Input` (con `error`), `Select`, `Pagination` y `Card` (con sus subpartes) sobre el paquete
+- [x] 3.4 `Toaster` de `sonner` con las clases de marca
+- [x] 3.5 `npm test` y `tsc -b` en verde
 
 ## 4. Admin: Navbar, Layout y login
 

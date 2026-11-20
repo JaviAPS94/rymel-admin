@@ -1,6 +1,11 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
-import { IconX } from "@tabler/icons-react";
+import { type ReactNode } from "react";
+import { Modal as UIModal } from "@rymel/ui";
 
+/**
+ * Adaptador del `Modal` de @rymel/ui con la API del admin. El comportamiento
+ * (pila de Esc, Esc ya usado dentro, fondo desplazable con cabecera fija)
+ * vive en el paquete; `Modal.spec.tsx` lo fija para el admin.
+ */
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,28 +15,16 @@ interface ModalProps {
   showCloseButton?: boolean;
 }
 
-const maxWidthClasses = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-  "3xl": "max-w-3xl",
-  "5xl": "max-w-5xl",
-};
+// Anchos del admin → tamaños del sistema (md: 576 px, lg: 768 px, xl: 1120 px).
+const SIZES = {
+  sm: "sm",
+  md: "sm",
+  lg: "md",
+  xl: "md",
+  "3xl": "lg",
+  "5xl": "xl",
+} as const;
 
-/**
- * Open modals, innermost last: Escape closes only the one on top (a picker
- * opened from the template menu, say), not every modal underneath.
- */
-const openModals: symbol[] = [];
-
-/**
- * A modal taller than the screen scrolls with the page behind it instead of
- * being cut off: before, a long import preview pushed the title and the close
- * button above the top of the screen, with no way to reach them. The header
- * stays stuck to the top while scrolling. The body itself does not scroll, so
- * the dropdowns inside it are not clipped.
- */
 export const Modal = ({
   isOpen,
   onClose,
@@ -39,61 +32,16 @@ export const Modal = ({
   children,
   maxWidth = "md",
   showCloseButton = true,
-}: ModalProps) => {
-  const titleId = useId();
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const token = Symbol("modal");
-    openModals.push(token);
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || openModals[openModals.length - 1] !== token) return;
-      // Someone inside already used it (closing an autocomplete in the
-      // formula editor): closing the modal too would lose unsaved work
-      if (event.defaultPrevented) return;
-      event.stopPropagation();
-      onCloseRef.current();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      openModals.splice(openModals.indexOf(token), 1);
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50" data-modal-overlay>
-      <div className="flex min-h-full items-start justify-center p-4 sm:items-center">
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          className={`bg-white rounded-xl shadow-2xl ${maxWidthClasses[maxWidth]} w-full`}
-        >
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-4 rounded-t-xl border-b bg-white p-6">
-            <h2 id={titleId} className="text-2xl font-bold text-gray-900">
-              {title}
-            </h2>
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
-                type="button"
-                aria-label="Cerrar"
-              >
-                <IconX className="h-6 w-6" />
-              </button>
-            )}
-          </div>
-          <div className="p-6">{children}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
+}: ModalProps) => (
+  <UIModal
+    open={isOpen}
+    onClose={onClose}
+    title={title}
+    size={SIZES[maxWidth]}
+    showCloseButton={showCloseButton}
+    // El modal del admin nunca se cerró al pulsar fuera: se conserva.
+    dismissable={false}
+  >
+    {children}
+  </UIModal>
+);

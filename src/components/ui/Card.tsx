@@ -1,75 +1,41 @@
 import { type HTMLAttributes } from "react";
+import { Card as UICard } from "@rymel/ui";
 import { cn } from "@utils/cn";
 
+/**
+ * Tarjeta del sistema de diseño con las subpartes que usa el admin
+ * (cabecera, título, descripción, contenido, pie).
+ */
 export type CardProps = HTMLAttributes<HTMLDivElement>;
 
-const Card = ({ className, ...props }: CardProps) => {
-  return (
-    <div
-      className={cn(
-        "rounded-lg border border-gray-200 bg-white shadow-sm",
-        className
-      )}
-      {...props}
-    />
-  );
-};
+const Card = ({ className, ...props }: CardProps) => (
+  <UICard as="div" padded={false} className={className} {...props} />
+);
 
-const CardHeader = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) => {
-  return (
-    <div
-      className={cn("flex flex-col space-y-1.5 p-6", className)}
-      {...props}
-    />
-  );
-};
+const CardHeader = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex flex-col gap-1 p-6", className)} {...props} />
+);
 
-const CardTitle = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLHeadingElement>) => {
-  return (
-    <h3
-      className={cn(
-        "text-2xl font-semibold leading-none tracking-tight",
-        className
-      )}
-      {...props}
-    />
-  );
-};
+const CardTitle = ({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) => (
+  <h3
+    className={cn(
+      "m-0 text-xl font-extrabold leading-tight tracking-[-0.01em] text-gray-900",
+      className,
+    )}
+    {...props}
+  />
+);
 
-const CardDescription = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLParagraphElement>) => {
-  return <p className={cn("text-sm text-gray-500", className)} {...props} />;
-};
+const CardDescription = ({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) => (
+  <p className={cn("m-0 text-sm text-gray-600", className)} {...props} />
+);
 
-const CardContent = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) => {
-  return <div className={cn("p-6 pt-0", className)} {...props} />;
-};
+const CardContent = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("p-6 pt-0", className)} {...props} />
+);
 
-const CardFooter = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) => {
-  return (
-    <div className={cn("flex items-center p-6 pt-0", className)} {...props} />
-  );
-};
+const CardFooter = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex items-center p-6 pt-0", className)} {...props} />
+);
 
-export {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-};
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };
