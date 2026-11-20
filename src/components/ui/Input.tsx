@@ -7,6 +7,8 @@ import { Input as UIInput } from "@rymel/ui";
  */
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   error?: string;
+  /** `lg`: 50 px de alto (login, buscadores principales). */
+  size?: "md" | "lg";
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({ error, className, ...props }, ref) => (

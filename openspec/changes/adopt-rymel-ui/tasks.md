@@ -23,12 +23,12 @@
 
 ## 4. Admin: Navbar, Layout y login
 
-- [ ] 4.1 `Navbar.tsx` como configuración del `Navbar` del paquete: marca «Rymel Admin» al Dashboard, «Catálogos» y «Administración» por rol, cuenta con roles y «Cerrar sesión»
-- [ ] 4.2 Quitar «Recursos» (`/resources`) y «Configuración» (`/settings`); comprobar que todo enlace tiene ruta en `App.tsx`
-- [ ] 4.3 Sección activa por prefijo de ruta (`/bom/12` enciende «Catálogos» → Materiales)
-- [ ] 4.4 Eliminar `NavDropdown.tsx`; `Layout.tsx` sin contenedor propio (cada página usa `PageHeader` + `Page`)
-- [ ] 4.5 Login con la composición del cliente (banda índigo, marca, tarjeta con `Field`/`Input`)
-- [ ] 4.6 Prueba de la barra: secciones según rol, sin enlaces retirados, menú móvil cierra al navegar
+- [x] 4.1 `Navbar.tsx` como configuración del `Navbar` del paquete: marca «Rymel Admin» al Dashboard, «Catálogos» y «Administración» por rol, cuenta con roles y «Cerrar sesión»
+- [x] 4.2 Quitar «Recursos» (`/resources`) y «Configuración» (`/settings`); comprobar que todo enlace tiene ruta en `App.tsx`
+- [x] 4.3 Sección activa por prefijo de ruta (`/bom/12` enciende «Catálogos» → Materiales)
+- [x] 4.4 Eliminar `NavDropdown.tsx`; `Layout.tsx` con opción `bare` (sin contenedor): las páginas migradas ponen su `PageHeader` + `Page`, las demás siguen en el contenedor hasta su grupo
+- [x] 4.5 Login con la composición del cliente (banda índigo, marca, tarjeta con `Field`/`Input`)
+- [x] 4.6 Prueba de la barra: secciones según rol, sin enlaces retirados, menú móvil cierra al navegar
 
 ## 5. Admin: listados
 
