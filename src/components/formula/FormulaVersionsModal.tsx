@@ -59,7 +59,7 @@ export const FormulaVersionsModal = ({
               key={version.id}
               className={`rounded-lg border p-4 ${
                 version.isCurrent
-                  ? "border-rymel-blue bg-blue-50/50"
+                  ? "border-rymel-blue bg-rymel-tint"
                   : "border-gray-200"
               }`}
             >

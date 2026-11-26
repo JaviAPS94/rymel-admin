@@ -9,7 +9,7 @@ interface ProcessTabsProps {
 
 /** One tab per process, in its order, like the sheets of the workbook */
 export const ProcessTabs = ({ processes, selectedId, onSelect }: ProcessTabsProps) => (
-  <div role="tablist" aria-label="Procesos" className="flex gap-1 overflow-x-auto border-b border-gray-200">
+  <div role="tablist" aria-label="Procesos" className="flex gap-1 overflow-x-auto border-b border-gray-200 px-5">
     {processes.map((process) => {
       const selected = process.id === selectedId;
       return (
@@ -20,17 +20,17 @@ export const ProcessTabs = ({ processes, selectedId, onSelect }: ProcessTabsProp
           aria-selected={selected}
           onClick={() => onSelect(process.id)}
           className={cn(
-            "whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+            "flex h-[60px] cursor-pointer items-center gap-2 whitespace-nowrap border-0 border-b-[3px] border-solid bg-transparent px-4 text-[15px] transition-colors",
             selected
-              ? "border-rymel-blue text-rymel-blue"
-              : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300",
+              ? "border-rymel-blue font-bold text-rymel-blue"
+              : "border-transparent font-semibold text-gray-600 hover:text-gray-900",
           )}
         >
           {process.name}
           <span
             className={cn(
-              "ml-2 rounded-full px-2 py-0.5 text-xs",
-              selected ? "bg-rymel-blue/10 text-rymel-blue" : "bg-gray-100 text-gray-500",
+              "rounded-full px-2 py-px text-xs font-bold",
+              selected ? "bg-rymel-soft text-rymel-indigo" : "bg-gray-100 text-gray-700",
             )}
           >
             {process.phantomItemsCount}

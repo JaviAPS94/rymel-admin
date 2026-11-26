@@ -1,5 +1,6 @@
 import { Route, Switch, Redirect } from "wouter";
 import { Toaster } from "sonner";
+import { toastOptions } from "@rymel/ui";
 import { LoginPage } from "@pages/LoginPage";
 import { DashboardPage } from "@pages/DashboardPage";
 import { UsersPage } from "@pages/UsersPage";
@@ -13,6 +14,7 @@ import { TemplateListPage } from "@pages/TemplateListPage";
 import { TemplateEditorPage } from "@pages/TemplateEditorPage";
 import { PhantomItemListPage } from "@pages/PhantomItemListPage";
 import { PhantomItemEditorPage } from "@pages/PhantomItemEditorPage";
+import { SemiFinishedListPage } from "@pages/SemiFinishedListPage";
 import { ProtectedRoute } from "@components/ProtectedRoute";
 import { useAuthStore } from "@store/authStore";
 import { Role } from "@/types/user.types";
@@ -87,6 +89,12 @@ const App = () => {
           </ProtectedRoute>
         </Route>
 
+        <Route path="/semi-finished">
+          <ProtectedRoute roles={[Role.ADMIN]}>
+            <SemiFinishedListPage />
+          </ProtectedRoute>
+        </Route>
+
         <Route path="/phantom-items">
           <ProtectedRoute roles={[Role.ADMIN, Role.DESIGN, Role.NORM]}>
             <PhantomItemListPage />
@@ -108,7 +116,7 @@ const App = () => {
         </Route>
       </Switch>
 
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" toastOptions={toastOptions} />
     </>
   );
 };

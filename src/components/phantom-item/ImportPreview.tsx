@@ -31,7 +31,7 @@ export const ImportPreview = ({ result, bySheet = false }: ImportPreviewProps) =
       </div>
 
       {newProcesses.length > 0 && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        <div className="rounded-[14px] bg-rymel-tint px-4 py-3 text-sm text-rymel-blue">
           {result.dryRun ? "Se crearán" : "Se crearon"} los procesos{" "}
           {newProcesses.map((sheet) => `«${sheet.processName}»`).join(", ")} con las columnas de su
           hoja.
@@ -67,7 +67,7 @@ export const ImportPreview = ({ result, bySheet = false }: ImportPreviewProps) =
                       <>
                         {sheet.processName}
                         {sheet.newProcess && (
-                          <span className="ml-2 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                          <span className="ml-2 rounded-full bg-rymel-soft px-2 py-0.5 text-xs font-semibold text-rymel-indigo">
                             nuevo
                           </span>
                         )}

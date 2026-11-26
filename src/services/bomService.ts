@@ -6,6 +6,8 @@ import type {
   UpdateBomDto,
   CreateBomNodeDto,
   UpdateBomNodeDto,
+  OfferedPhantomItem,
+  PhantomProductType,
 } from '@/types/bom.types';
 
 export const bomService = {
@@ -70,5 +72,34 @@ export const bomService = {
 
   async deleteNode(nodeId: number): Promise<void> {
     await apiClient.delete(`/bill-of-materials/nodes/${nodeId}`);
+  },
+
+  /** Tipos PT de los fantasmas, para elegir los de una estructura. */
+  async getPhantomProductTypes(): Promise<PhantomProductType[]> {
+    const response = await apiClient.get<PhantomProductType[]>('/phantom-items/product-types');
+    return response.data;
+  },
+
+  async setProductTypes(bomId: number, codes: string[]): Promise<string[]> {
+    const response = await apiClient.put<{ productTypes: string[] }>(
+      `/bill-of-materials/${bomId}/product-types`,
+      { codes },
+    );
+    return response.data.productTypes;
+  },
+
+  async addPhantomFamilies(nodeId: number, familyIds: number[]): Promise<void> {
+    await apiClient.post(`/bill-of-materials/nodes/${nodeId}/phantom-families`, { familyIds });
+  },
+
+  async removePhantomFamily(id: number): Promise<void> {
+    await apiClient.delete(`/bill-of-materials/node-phantom-families/${id}`);
+  },
+
+  async getOfferedPhantomItems(bomId: number, familyId: number): Promise<OfferedPhantomItem[]> {
+    const response = await apiClient.get<OfferedPhantomItem[]>(
+      `/bill-of-materials/${bomId}/phantom-families/${familyId}/items`,
+    );
+    return response.data;
   },
 };

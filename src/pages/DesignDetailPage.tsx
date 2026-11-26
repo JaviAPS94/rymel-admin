@@ -2,13 +2,22 @@ import { useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   IconAlertTriangle,
-  IconArrowLeft,
+  IconFileDescription,
   IconDownload,
   IconRefresh,
   IconTrash,
 } from "@tabler/icons-react";
 import { parseElementValues, type BomSummaryCell } from "@rymel/design-template";
 import { Layout } from "@components/Layout";
+import {
+  Button as UIButton,
+  Card as UICard,
+  EmptyState,
+  HeaderChip,
+  Notice,
+  Page,
+  PageHeader,
+} from "@rymel/ui";
 import { Button } from "@components/ui/Button";
 import { Modal } from "@components/ui/Modal";
 import { ReadOnlySheet } from "@components/design/ReadOnlySheet";
@@ -53,10 +62,24 @@ export const DesignDetailPage = () => {
   const detail = useDesignDetail(designId);
 
   return (
-    <Layout>
-      {detail.isLoading && <p className="text-sm text-gray-500">Cargando diseño…</p>}
-      {detail.isError && <p className="text-sm text-red-600">No se pudo cargar el diseño.</p>}
-      {detail.data && <DesignView design={detail.data} />}
+    <Layout bare>
+      {detail.data ? (
+        <DesignView design={detail.data} />
+      ) : (
+        <>
+          <PageHeader
+            back={{ label: "Diseños", href: "/designs" }}
+            title={detail.isError ? "No se pudo cargar el diseño" : "Cargando diseño…"}
+          />
+          <Page>
+            {detail.isError ? (
+              <EmptyState tone="error" title="No se pudo cargar el diseño." />
+            ) : (
+              <div className="h-40 animate-pulse rounded-[20px] border border-gray-200 bg-white" />
+            )}
+          </Page>
+        </>
+      )}
     </Layout>
   );
 };
@@ -83,64 +106,83 @@ const DesignView = ({ design }: { design: DesignDetail }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <button
-            onClick={() => navigate("/designs")}
-            className="mb-1 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
-          >
-            <IconArrowLeft className="h-4 w-4" /> Diseños
-          </button>
-          <h1 className="font-mono text-2xl font-bold text-gray-900">{design.code}</h1>
-          <p className="text-sm text-gray-500">
-            {design.name} · {design.designSubType?.designType?.name ?? "—"} ·{" "}
-            {design.designSubType?.name ?? "—"} · creado {formatDate(design.createdAt)} · actualizado{" "}
-            {formatDate(design.updatedAt)}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={exportWorkbook} disabled={exporting}>
-            <IconDownload className="mr-1 h-4 w-4" />
-            {exporting ? "Exportando…" : "Exportar a Excel"}
-          </Button>
-          {stale && (
-            <Button variant="outline" size="sm" onClick={() => setRecalculating(true)}>
-              <IconRefresh className="mr-1 h-4 w-4" />
-              Recalcular
-            </Button>
-          )}
-          <Button variant="danger" size="sm" onClick={() => setConfirmDeactivate(true)}>
-            <IconTrash className="mr-1 h-4 w-4" />
-            Desactivar
-          </Button>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        icon={<IconFileDescription />}
+        back={{ label: "Diseños", onClick: () => navigate("/designs") }}
+        title={design.name}
+        description={`Creado ${formatDate(design.createdAt)} · actualizado ${formatDate(design.updatedAt)}`}
+        meta={
+          <>
+            <HeaderChip mono>{design.code}</HeaderChip>
+            <HeaderChip>{design.designSubType?.designType?.name ?? "—"}</HeaderChip>
+            <HeaderChip>Subtipo {design.designSubType?.name ?? "—"}</HeaderChip>
+          </>
+        }
+        actions={
+          <>
+            <UIButton
+              variant="outlineLight"
+              icon={<IconDownload className="h-[18px] w-[18px]" />}
+              onClick={exportWorkbook}
+              disabled={exporting}
+            >
+              {exporting ? "Exportando…" : "Exportar a Excel"}
+            </UIButton>
+            {stale && (
+              <UIButton
+                variant="light"
+                icon={<IconRefresh className="h-[18px] w-[18px]" />}
+                onClick={() => setRecalculating(true)}
+              >
+                Recalcular
+              </UIButton>
+            )}
+            <UIButton
+              variant="dangerLight"
+              icon={<IconTrash className="h-[18px] w-[18px]" />}
+              onClick={() => setConfirmDeactivate(true)}
+            >
+              Desactivar
+            </UIButton>
+          </>
+        }
+      />
 
-      {stale && (
-        <p role="status" className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          <IconAlertTriangle className="h-4 w-4 shrink-0" />
-          Alguna hoja se calculó con una versión de fórmula que ya no es la vigente.
-        </p>
-      )}
-
-      <div role="tablist" className="flex gap-1 border-b border-gray-200">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            role="tab"
-            aria-selected={tab === item.id}
-            onClick={() => setTab(item.id)}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm ${
-              tab === item.id
-                ? "border-rymel-blue font-medium text-rymel-blue"
-                : "border-transparent text-gray-500 hover:text-gray-800"
-            }`}
+      <Page>
+        <UICard padded={false} className="overflow-hidden">
+          <div
+            role="tablist"
+            aria-label="Secciones del diseño"
+            className="flex gap-1 overflow-x-auto border-b border-gray-200 px-5"
           >
-            {item.label}
-          </button>
-        ))}
-      </div>
+            {TABS.map((item) => {
+              const selected = tab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setTab(item.id)}
+                  className={`h-[60px] cursor-pointer whitespace-nowrap border-0 border-b-[3px] border-solid bg-transparent px-4 text-[15px] transition-colors ${
+                    selected
+                      ? "border-rymel-blue font-bold text-rymel-blue"
+                      : "border-transparent font-semibold text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-4 p-5 sm:p-7">
+            {stale && (
+              <Notice tone="warning" icon={<IconAlertTriangle className="h-[18px] w-[18px]" />}>
+                Alguna hoja se calculó con una versión de fórmula que ya no es la vigente.
+              </Notice>
+            )}
 
       {tab === "summary" && <Summary design={design} versions={versions.data} />}
       {tab === "sheets" && (
@@ -157,6 +199,9 @@ const DesignView = ({ design }: { design: DesignDetail }) => {
         />
       )}
       {tab === "bom" && <BomView bom={bom} />}
+          </div>
+        </UICard>
+      </Page>
 
       <Modal isOpen={confirmDeactivate} onClose={() => setConfirmDeactivate(false)} title="¿Desactivar el diseño?">
         <p className="text-sm text-gray-700">
@@ -191,7 +236,7 @@ const DesignView = ({ design }: { design: DesignDetail }) => {
           onClose={() => setRecalculating(false)}
         />
       )}
-    </div>
+    </>
   );
 };
 
@@ -389,7 +434,7 @@ const BomView = ({ bom }: { bom: ReturnType<typeof useDesignBom> }) => {
       </p>
       {state.adjustment && state.changedSinceAdjustment && (
         <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-          La lista generada cambió desde que el cliente hizo estos ajustes (estructura BOM, hojas del
+          La lista generada cambió desde que el cliente hizo estos ajustes (listado de materiales, hojas del
           diseño, accesorios o catálogo).
         </p>
       )}

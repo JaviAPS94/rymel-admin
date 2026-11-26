@@ -52,7 +52,7 @@ export const BomBasePanel = ({ document, onSetBomSheet, onOpenSheet }: Props) =>
       const others = document.sheets.filter((sheet) => sheet !== current);
       onSetBomSheet(buildBomBaseSheet(structure, others));
     } catch {
-      setError("No se pudo cargar la estructura BOM.");
+      setError("No se pudo cargar el listado de materiales.");
     } finally {
       setPending(false);
     }
@@ -86,11 +86,11 @@ export const BomBasePanel = ({ document, onSetBomSheet, onOpenSheet }: Props) =>
       )}
 
       <label className="space-y-1">
-        <span className="text-xs font-medium text-gray-700">Estructura BOM</span>
+        <span className="text-xs font-medium text-gray-700">Listado de materiales</span>
         <select
           value={structureId}
           onChange={(event) => setStructureId(event.target.value === "" ? "" : Number(event.target.value))}
-          aria-label="Estructura BOM"
+          aria-label="Listado de materiales"
           className="h-9 w-full rounded border border-gray-300 px-2 text-sm"
         >
           <option value="">Elige una estructura</option>

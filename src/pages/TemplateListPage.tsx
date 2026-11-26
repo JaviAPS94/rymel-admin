@@ -12,7 +12,25 @@ import {
 } from "@tabler/icons-react";
 import { Layout } from "@components/Layout";
 import { Button } from "@components/ui/Button";
-import { Pagination } from "@components/ui/Pagination";
+import { Modal } from "@components/ui/Modal";
+import { nativeFieldClass } from "@components/ui/fieldClasses";
+import {
+  Badge,
+  Button as UIButton,
+  Card as UICard,
+  Checkbox,
+  EmptyState,
+  FilterField,
+  IconButton,
+  Input as UIInput,
+  Notice,
+  Page,
+  PageHeader,
+  Pagination as UIPagination,
+  RowIcon,
+  TableCard,
+  Tag,
+} from "@rymel/ui";
 import {
   TemplateFormModal,
   type TemplateFormValues,
@@ -40,15 +58,9 @@ const STATUS_LABEL: Record<TemplateStatus, string> = {
 };
 
 const StatusBadge = ({ status }: { status: TemplateStatus }) => (
-  <span
-    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-      status === TemplateStatus.PUBLISHED
-        ? "bg-green-100 text-green-800"
-        : "bg-gray-100 text-gray-700"
-    }`}
-  >
+  <Badge tone={status === TemplateStatus.PUBLISHED ? "success" : "neutral"} dot>
     {STATUS_LABEL[status]}
-  </span>
+  </Badge>
 );
 
 /** Diálogo de baja. La plantilla deja de ofrecerse y su código queda libre. */
@@ -63,37 +75,27 @@ const DeleteDialog = ({
   onConfirm: () => void;
   isPending: boolean;
 }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-      <h3 className="text-lg font-bold text-gray-900">
-        Dar de baja «{target.name}»
-      </h3>
-      <div className="mt-3 space-y-2 text-sm text-gray-700">
-        {target.status === TemplateStatus.PUBLISHED && (
-          <p className="rounded-md bg-amber-50 p-3 text-amber-900">
-            Está publicada: los diseñadores dejarán de verla en la biblioteca.
-          </p>
-        )}
-        <p>
-          Su código <span className="font-mono">{target.code}</span> queda libre
-          para otra plantilla. Los diseños ya guardados no cambian, porque cada
-          uno lleva dentro su copia de las hojas.
-        </p>
-      </div>
-      <div className="mt-6 flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel} disabled={isPending}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={onConfirm}
-          disabled={isPending}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          {isPending ? "Dando de baja…" : "Dar de baja"}
-        </Button>
-      </div>
+  <Modal isOpen onClose={onCancel} title={`Dar de baja «${target.name}»`}>
+    <div className="space-y-3 text-sm text-gray-700">
+      {target.status === TemplateStatus.PUBLISHED && (
+        <Notice tone="warning">
+          Está publicada: los diseñadores dejarán de verla en la biblioteca.
+        </Notice>
+      )}
+      <p>
+        Su código <span className="font-mono">{target.code}</span> queda libre para otra plantilla.
+        Los diseños ya guardados no cambian, porque cada uno lleva dentro su copia de las hojas.
+      </p>
     </div>
-  </div>
+    <div className="mt-6 flex justify-end gap-2">
+      <Button variant="outline" onClick={onCancel} disabled={isPending}>
+        Cancelar
+      </Button>
+      <Button variant="danger" onClick={onConfirm} disabled={isPending}>
+        {isPending ? "Dando de baja…" : "Dar de baja"}
+      </Button>
+    </div>
+  </Modal>
 );
 
 /**
@@ -178,235 +180,236 @@ export const TemplateListPage = () => {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-900">
-              <IconFileSpreadsheet className="h-8 w-8 text-rymel-blue" />
-              Plantillas
-            </h1>
-            <p className="mt-1 text-gray-600">
-              La base sobre la que los diseñadores calculan. Solo las publicadas
-              llegan a la biblioteca.
-            </p>
-          </div>
-          <Button onClick={() => setForm({ mode: "create" })}>
-            <IconPlus className="mr-1 h-4 w-4" />
+    <Layout bare>
+      <PageHeader
+        eyebrow="Administración"
+        title="Plantillas"
+        description={
+          data ? (
+            <>
+              <strong>
+                {data.total} {data.total === 1 ? "plantilla" : "plantillas"}
+              </strong>
+              . La base sobre la que calculan los diseñadores; solo las publicadas llegan a la
+              biblioteca.
+            </>
+          ) : (
+            "La base sobre la que calculan los diseñadores. Solo las publicadas llegan a la biblioteca."
+          )
+        }
+        actions={
+          <UIButton
+            variant="light"
+            size="lg"
+            icon={<IconPlus className="h-[18px] w-[18px]" />}
+            onClick={() => setForm({ mode: "create" })}
+          >
             Nueva plantilla
-          </Button>
-        </div>
+          </UIButton>
+        }
+      />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-64 flex-1">
-            <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
+      <Page>
+        <UICard as="div" role="search" className="flex flex-wrap items-end gap-3">
+          <FilterField label="Buscar" className="flex-[2_1_280px]">
+            <UIInput
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
                 setPage(1);
               }}
-              placeholder="Buscar por nombre o código…"
-              className="h-10 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-rymel-blue focus:outline-none"
-            />
-          </div>
-
-          <select
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as TemplateStatus | "");
-              setPage(1);
-            }}
-            className="h-10 rounded-md border border-gray-300 px-3 text-sm focus:border-rymel-blue focus:outline-none"
-          >
-            <option value="">Todos los estados</option>
-            <option value={TemplateStatus.PUBLISHED}>Publicadas</option>
-            <option value={TemplateStatus.DRAFT}>Borradores</option>
-          </select>
-
-          <select
-            value={type}
-            onChange={(event) => {
-              setType(event.target.value as TemplateType | "");
-              setPage(1);
-            }}
-            className="h-10 rounded-md border border-gray-300 px-3 text-sm focus:border-rymel-blue focus:outline-none"
-          >
-            <option value="">Todos los tipos</option>
-            <option value={TemplateType.DESIGN}>Diseño</option>
-            <option value={TemplateType.COST}>Costo</option>
-          </select>
-
-          <select
-            value={subTypeId}
-            onChange={(event) => {
-              setSubTypeId(
-                event.target.value === "" ? "" : Number(event.target.value),
-              );
-              setPage(1);
-            }}
-            className="h-10 rounded-md border border-gray-300 px-3 text-sm focus:border-rymel-blue focus:outline-none"
-          >
-            <option value="">Todos los subtipos</option>
-            {(subTypes.data ?? []).map((subType) => (
-              <option key={subType.id} value={subType.id}>
-                {subTypeLabel(subType)}
-              </option>
-            ))}
-          </select>
-
-          <label className="flex items-center gap-2 text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={includeDeleted}
-              onChange={() => {
-                setIncludeDeleted(!includeDeleted);
+              onClear={() => {
+                setSearch("");
                 setPage(1);
               }}
-              className="h-4 w-4 rounded border-gray-300"
+              placeholder="Nombre o código…"
+              leftIcon={<IconSearch className="h-[18px] w-[18px]" />}
             />
-            Incluir dadas de baja
-          </label>
-        </div>
+          </FilterField>
+          <FilterField label="Estado">
+            <select
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value as TemplateStatus | "");
+                setPage(1);
+              }}
+              className={nativeFieldClass}
+            >
+              <option value="">Todos los estados</option>
+              <option value={TemplateStatus.PUBLISHED}>Publicadas</option>
+              <option value={TemplateStatus.DRAFT}>Borradores</option>
+            </select>
+          </FilterField>
+          <FilterField label="Tipo">
+            <select
+              value={type}
+              onChange={(event) => {
+                setType(event.target.value as TemplateType | "");
+                setPage(1);
+              }}
+              className={nativeFieldClass}
+            >
+              <option value="">Todos los tipos</option>
+              <option value={TemplateType.DESIGN}>Diseño</option>
+              <option value={TemplateType.COST}>Costo</option>
+            </select>
+          </FilterField>
+          <FilterField label="Subtipo">
+            <select
+              value={subTypeId}
+              onChange={(event) => {
+                setSubTypeId(event.target.value === "" ? "" : Number(event.target.value));
+                setPage(1);
+              }}
+              className={nativeFieldClass}
+            >
+              <option value="">Todos los subtipos</option>
+              {(subTypes.data ?? []).map((subType) => (
+                <option key={subType.id} value={subType.id}>
+                  {subTypeLabel(subType)}
+                </option>
+              ))}
+            </select>
+          </FilterField>
+          <div className="flex h-[46px] items-center">
+            <Checkbox
+              label="Incluir dadas de baja"
+              checked={includeDeleted}
+              onCheckedChange={(checked) => {
+                setIncludeDeleted(checked);
+                setPage(1);
+              }}
+            />
+          </div>
+        </UICard>
 
         {query.isLoading ? (
-          <p className="text-sm text-gray-500">Cargando…</p>
+          <p className="text-sm text-gray-600">Cargando…</p>
         ) : data && data.items.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-10 text-center">
-            <p className="text-gray-600">
-              Ninguna plantilla coincide con los filtros.
-            </p>
-            <Button variant="outline" className="mt-3" onClick={clearFilters}>
-              Limpiar filtros
-            </Button>
-          </div>
+          <EmptyState
+            title="Ninguna plantilla coincide con los filtros."
+            action={
+              <Button variant="outline" onClick={clearFilters}>
+                Limpiar filtros
+              </Button>
+            }
+          />
         ) : (
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-gray-600">
+          <TableCard
+            aria-label="Plantillas"
+            minWidth={1040}
+            footer={
+              totalPages > 1 ? (
+                <UIPagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  totalItems={data?.total}
+                  pageSize={LIMIT}
+                />
+              ) : undefined
+            }
+          >
+            <table className="rm-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Nombre</th>
-                  <th className="px-4 py-3">Código</th>
-                  <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3">Subtipo</th>
-                  <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3 text-right">Versión</th>
-                  <th className="px-4 py-3 text-right">Hojas</th>
-                  <th className="px-4 py-3 text-right">Celdas</th>
-                  <th className="px-4 py-3"></th>
+                  <th>Plantilla</th>
+                  <th>Tipo</th>
+                  <th>Subtipo</th>
+                  <th>Estado</th>
+                  <th data-align="right">Versión</th>
+                  <th data-align="right">Hojas</th>
+                  <th data-align="right">Celdas</th>
+                  <th>
+                    <span className="sr-only">Acciones</span>
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {(data?.items ?? []).map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3">
-                      <Link href={`/templates/${item.id}`}>
-                        <span className="cursor-pointer font-medium text-gray-900 hover:text-rymel-blue">
-                          {item.name}
-                        </span>
-                      </Link>
-                      {item.description && (
-                        <div className="text-xs text-gray-500">
-                          {item.description}
+                    <td>
+                      <div className="flex items-start gap-3.5">
+                        <RowIcon>
+                          <IconFileSpreadsheet className="h-[18px] w-[18px]" />
+                        </RowIcon>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <Link
+                            href={`/templates/${item.id}`}
+                            className="font-bold text-gray-900 no-underline hover:text-rymel-indigo"
+                          >
+                            {item.name}
+                          </Link>
+                          <span className="font-mono text-[12.5px] text-gray-600">{item.code}</span>
+                          {item.description && (
+                            <span className="text-[13px] text-gray-600">{item.description}</span>
+                          )}
+                          {/* Una plantilla vacía no tiene nada que cargar: se dice
+                              aquí para que no haga falta abrirla para saberlo. */}
+                          {(item.sheetCount === 0 || item.hasDraft) && (
+                            <span className="mt-1 flex flex-wrap gap-1.5">
+                              {item.sheetCount === 0 && (
+                                <Badge tone="warning" icon={<IconAlertTriangle className="h-3.5 w-3.5" />}>
+                                  Sin hojas: no tiene contenido que cargar
+                                </Badge>
+                              )}
+                              {item.hasDraft && <Badge tone="brand">Tiene cambios sin publicar</Badge>}
+                            </span>
+                          )}
                         </div>
-                      )}
-                      {/* Una plantilla vacía no tiene nada que cargar: se dice
-                          aquí para que no haga falta abrirla para saberlo. */}
-                      {item.sheetCount === 0 && (
-                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-700">
-                          <IconAlertTriangle className="h-3.5 w-3.5" />
-                          Sin hojas: no tiene contenido que cargar
-                        </div>
-                      )}
-                      {item.hasDraft && (
-                        <div className="mt-1 text-xs font-medium text-blue-700">
-                          Tiene cambios sin publicar
-                        </div>
-                      )}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                      {item.code}
+                    <td>
+                      <Badge tone={item.type === TemplateType.COST ? "neutral" : "brand"} dot>
+                        {item.type === TemplateType.COST ? "Costo" : "Diseño"}
+                      </Badge>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {item.type === TemplateType.COST ? "Costo" : "Diseño"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {item.designSubTypeName ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
+                    <td className="text-gray-600">{item.designSubTypeName ?? "—"}</td>
+                    <td>
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">
-                      {item.version}
+                    <td data-align="right" className="tabular-nums">
+                      <Tag mono>v{item.version}</Tag>
                     </td>
                     <td
-                      className={`px-4 py-3 text-right ${
-                        item.sheetCount === 0
-                          ? "font-medium text-amber-700"
-                          : "text-gray-600"
-                      }`}
+                      data-align="right"
+                      className={`font-semibold tabular-nums ${item.sheetCount === 0 ? "text-warning" : ""}`}
                     >
                       {item.sheetCount}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">
+                    <td data-align="right" className="font-semibold tabular-nums">
                       {item.cellCount.toLocaleString("es")}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          title="Editar"
-                          onClick={() => navigate(`/templates/${item.id}`)}
-                          className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-rymel-blue"
+                    <td data-align="right">
+                      <div className="flex justify-end gap-2">
+                        <IconButton label="Editar" onClick={() => navigate(`/templates/${item.id}`)}>
+                          <IconPencil className="h-[18px] w-[18px]" />
+                        </IconButton>
+                        <IconButton
+                          label="Duplicar"
+                          onClick={() => setForm({ mode: "duplicate", template: item })}
                         >
-                          <IconPencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          title="Duplicar"
-                          onClick={() =>
-                            setForm({ mode: "duplicate", template: item })
-                          }
-                          className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-rymel-blue"
-                        >
-                          <IconCopy className="h-4 w-4" />
-                        </button>
-                        <button
-                          title={
-                            item.hasDraft
-                              ? "Publicar los cambios"
-                              : "No hay cambios que publicar"
-                          }
+                          <IconCopy className="h-[18px] w-[18px]" />
+                        </IconButton>
+                        <IconButton
+                          label={item.hasDraft ? "Publicar los cambios" : "No hay cambios que publicar"}
                           disabled={!item.hasDraft || publish.isPending}
-                          onClick={() =>
-                            publish.mutate({ id: item.id, dto: {} })
-                          }
-                          className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-30"
+                          onClick={() => publish.mutate({ id: item.id, dto: {} })}
                         >
-                          <IconUpload className="h-4 w-4" />
-                        </button>
-                        <button
-                          title="Dar de baja"
-                          onClick={() => setDeleting(item)}
-                          className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-red-600"
-                        >
-                          <IconTrash className="h-4 w-4" />
-                        </button>
+                          <IconUpload className="h-[18px] w-[18px]" />
+                        </IconButton>
+                        <IconButton label="Dar de baja" tone="danger" onClick={() => setDeleting(item)}>
+                          <IconTrash className="h-[18px] w-[18px]" />
+                        </IconButton>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableCard>
         )}
-
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-        )}
-      </div>
+      </Page>
 
       {form && (
         <TemplateFormModal

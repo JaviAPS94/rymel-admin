@@ -156,7 +156,7 @@ export const SemiFinishedZoneForm = ({
         ))}
       </select>
       <p className="text-xs text-gray-500">
-        Una celda pertenece como mucho a una zona: si se solapan, el BOM no
+        Una celda pertenece como mucho a una zona: si se solapan, la lista de materiales no
         puede decidir a cuál atribuir su consumo.
       </p>
       <SubmitButton disabled={selected === ""} label={submitLabel} />

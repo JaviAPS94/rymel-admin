@@ -7,10 +7,12 @@ import {
   IconArrowLeft,
   IconDeviceFloppy,
   IconEye,
+  IconHelp,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
 import { Layout } from "@components/Layout";
+import { Button as UIButton, EmptyState, HeaderChip } from "@rymel/ui";
 import { Button } from "@components/ui/Button";
 import { FormulaBar } from "@components/template/FormulaBar";
 import { FormulaModeBar } from "@components/template/FormulaModeBar";
@@ -22,6 +24,7 @@ import { DiagnosticsPanel } from "@components/template/DiagnosticsPanel";
 import { BomBasePanel } from "@components/template/BomBasePanel";
 import { TracePanel } from "@components/template/TracePanel";
 import { PreviewPanel } from "@components/template/PreviewPanel";
+import { TemplateGuideModal } from "@components/template/TemplateGuideModal";
 import { TemplateGrid } from "@components/template/grid/TemplateGrid";
 import {
   TemplateContextMenu,
@@ -69,7 +72,7 @@ export const TemplateEditorPage = () => {
     <Editor key={detail.id} detailId={detail.id} />
   ) : (
     <Layout>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-600">
         {query.isLoading ? "Cargando plantilla…" : "No se encontró la plantilla."}
       </p>
     </Layout>
@@ -396,16 +399,14 @@ const Editor = ({ detailId }: { detailId: number }) => {
 
   if (!sheet) {
     return (
-      <Layout>
-        <div className="space-y-4">
-          <Header
-            detail={detail}
-            isDirty={state.isDirty}
-            onSave={() => void save.save()}
-          />
-          <p className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-            La plantilla no tiene hojas. Añade una para empezar.
-          </p>
+      <Layout bare>
+        <Header
+          detail={detail}
+          isDirty={state.isDirty}
+          onSave={() => void save.save()}
+        />
+        <div className="mx-auto max-w-[1280px] space-y-4 px-4 py-6 sm:px-8">
+          <EmptyState bare title="La plantilla no tiene hojas." description="Añade una para empezar." />
           <SheetTabs
             sheets={state.document.sheets}
             activeSheetName={state.activeSheetName}
@@ -423,13 +424,15 @@ const Editor = ({ detailId }: { detailId: number }) => {
   }
 
   return (
-    <Layout>
-      <div className="flex h-[calc(100vh-8rem)] flex-col gap-2">
+    <Layout bare>
+      {/* Alto de la pantalla menos la barra (75 px): la grilla ocupa el resto. */}
+      <div className="flex h-[calc(100vh-75px)] flex-col">
         <Header
           detail={detail}
           isDirty={state.isDirty}
           onSave={() => void save.save()}
         />
+        <div className="mx-auto flex min-h-0 w-full max-w-[1280px] flex-1 flex-col gap-2 px-4 pb-4 pt-3 sm:px-8">
 
         {save.conflict && (
           <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-900">
@@ -782,6 +785,7 @@ const Editor = ({ detailId }: { detailId: number }) => {
             )}
           </div>
         </div>
+        </div>
       </div>
     </Layout>
   );
@@ -795,32 +799,58 @@ const Header = ({
   detail: { id: number; version: number; hasDraft: boolean; document: { name: string; code: string } };
   isDirty: boolean;
   onSave: () => void;
-}) => (
-  <div className="flex items-start justify-between">
-    <div>
-      <Link href="/templates">
-        <span className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-rymel-blue">
-          <IconArrowLeft className="h-3.5 w-3.5" />
-          Plantillas
-        </span>
-      </Link>
-      <h1 className="text-xl font-bold text-gray-900">{detail.document.name}</h1>
-      <p className="text-xs text-gray-500">
-        <span className="font-mono">{detail.document.code}</span> · versión{" "}
-        {detail.version}
-        {isDirty && (
-          <span className="ml-2 font-medium text-amber-700">
-            Cambios sin guardar
-          </span>
-        )}
-      </p>
-    </div>
+}) => {
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  return (
+    // Banda índigo compacta: continúa la de la barra sin quitarle alto a la grilla.
+    <div className="relative shrink-0 overflow-hidden bg-rymel-blue">
+      <div aria-hidden="true" className="rm-dots absolute inset-y-0 right-0 w-[46%]" style={{ backgroundPosition: "0 -75px" }} />
+      <div className="relative mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8">
+        <div className="flex min-w-0 items-center gap-4">
+          <Link
+            href="/templates"
+            aria-label="Volver a plantillas"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white no-underline hover:bg-white/20"
+          >
+            <IconArrowLeft className="h-[18px] w-[18px]" />
+          </Link>
+          <div className="flex min-w-0 flex-col gap-1">
+            <h1 className="m-0 truncate text-xl font-extrabold tracking-[-0.01em] text-white">
+              {detail.document.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <HeaderChip mono>{detail.document.code}</HeaderChip>
+              <HeaderChip>versión {detail.version}</HeaderChip>
+              {isDirty && (
+                <span className="rounded-full bg-rymel-yellow px-2.5 py-[3px] text-[12px] font-bold text-rymel-blue">
+                  Cambios sin guardar
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
 
-    <Button onClick={onSave} disabled={!isDirty}>
-      <IconDeviceFloppy className="mr-1 h-4 w-4" />
-      Guardar
-    </Button>
-  </div>
-);
+        <div className="flex gap-2">
+          <UIButton
+            variant="outlineLight"
+            icon={<IconHelp className="h-[18px] w-[18px]" />}
+            onClick={() => setIsGuideOpen(true)}
+          >
+            Guía
+          </UIButton>
+          <UIButton
+            variant="accent"
+            icon={<IconDeviceFloppy className="h-[18px] w-[18px]" />}
+            onClick={onSave}
+            disabled={!isDirty}
+          >
+            Guardar
+          </UIButton>
+        </div>
+      </div>
+      {isGuideOpen && <TemplateGuideModal onClose={() => setIsGuideOpen(false)} />}
+    </div>
+  );
+};
 
 export default TemplateEditorPage;

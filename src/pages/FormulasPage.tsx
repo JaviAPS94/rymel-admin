@@ -12,7 +12,25 @@ import {
 import { Layout } from "@components/Layout";
 import { subTypeLabel } from "@services/designFunctionService";
 import { Button } from "@components/ui/Button";
-import { Pagination } from "@components/ui/Pagination";
+import { Modal } from "@components/ui/Modal";
+import { nativeFieldClass } from "@components/ui/fieldClasses";
+import {
+  Badge,
+  Button as UIButton,
+  Card as UICard,
+  Checkbox,
+  EmptyState,
+  FilterField,
+  IconButton,
+  Input as UIInput,
+  Notice,
+  Page,
+  PageHeader,
+  Pagination as UIPagination,
+  RowIcon,
+  TableCard,
+  Tag,
+} from "@rymel/ui";
 import { FormulaEditorModal } from "@components/formula/FormulaEditorModal";
 import { FormulaVersionsModal } from "@components/formula/FormulaVersionsModal";
 import { StaleSubDesignsPanel } from "@components/formula/StaleSubDesignsPanel";
@@ -52,48 +70,35 @@ const DeleteDialog = ({
   const impact = useDesignFunctionImpact(target.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-        <h3 className="text-lg font-bold text-gray-900">
-          Dar de baja «{target.name}»
-        </h3>
-
-        {impact.isLoading ? (
-          <p className="mt-3 text-sm text-gray-500">Midiendo el impacto…</p>
-        ) : impact.data ? (
-          <div className="mt-3 space-y-2 text-sm text-gray-700">
-            <p>
-              Está asignada a <strong>{impact.data.subTypeCount}</strong>{" "}
-              subtipo(s)
-              {impact.data.subTypeNames.length > 0 &&
-                `: ${impact.data.subTypeNames.join(", ")}`}
-              .
-            </p>
-            <p>
-              La usan <strong>{impact.data.subDesignCount}</strong> sub-diseño(s)
-              en <strong>{impact.data.designCount}</strong> diseño(s).
-            </p>
-            <p className="text-gray-600">
-              Dejará de ofrecerse en las hojas. Su historial y los valores ya
-              calculados en los diseños se conservan.
-            </p>
-          </div>
-        ) : null}
-
-        <div className="mt-5 flex justify-end gap-3">
-          <Button variant="outline" onClick={onCancel} disabled={isPending}>
-            Cancelar
-          </Button>
-          <Button
-            className="bg-red-600 hover:bg-red-700"
-            onClick={onConfirm}
-            isLoading={isPending}
-          >
-            Dar de baja
-          </Button>
+    <Modal isOpen onClose={onCancel} title={`Dar de baja «${target.name}»`}>
+      {impact.isLoading ? (
+        <p className="text-sm text-gray-600">Midiendo el impacto…</p>
+      ) : impact.data ? (
+        <div className="space-y-2 text-sm text-gray-700">
+          <p>
+            Está asignada a <strong>{impact.data.subTypeCount}</strong> subtipo(s)
+            {impact.data.subTypeNames.length > 0 && `: ${impact.data.subTypeNames.join(", ")}`}.
+          </p>
+          <p>
+            La usan <strong>{impact.data.subDesignCount}</strong> sub-diseño(s) en{" "}
+            <strong>{impact.data.designCount}</strong> diseño(s).
+          </p>
+          <p className="text-gray-600">
+            Dejará de ofrecerse en las hojas. Su historial y los valores ya calculados en los
+            diseños se conservan.
+          </p>
         </div>
+      ) : null}
+
+      <div className="mt-6 flex justify-end gap-3">
+        <Button variant="outline" onClick={onCancel} disabled={isPending}>
+          Cancelar
+        </Button>
+        <Button variant="danger" onClick={onConfirm} isLoading={isPending}>
+          Dar de baja
+        </Button>
       </div>
-    </div>
+    </Modal>
   );
 };
 
@@ -127,43 +132,130 @@ export const FormulasPage = () => {
   const data = query.data;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / LIMIT)) : 1;
 
-  return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-900">
-              <IconMathFunction className="h-8 w-8 text-rymel-blue" />
-              Fórmulas
-            </h1>
-            <p className="mt-1 text-gray-600">
-              Administra las fórmulas de diseño y de costo que usan las hojas de
-              cálculo
-            </p>
-          </div>
-          {tab === "catalogo" && (
-            <Button onClick={() => setEditing(null)}>
-              <IconPlus className="mr-1 h-4 w-4" />
-              Nueva fórmula
-            </Button>
-          )}
-        </div>
+  const clearFilters = () => {
+    setSearch("");
+    setType("");
+    setSubTypeId("");
+    setIncludeDeleted(false);
+    setPage(1);
+  };
 
-        <div className="flex gap-1 border-b border-gray-200">
-          {TABS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                tab === item.id
-                  ? "border-b-2 border-rymel-blue text-rymel-blue"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+  return (
+    <Layout bare>
+      <PageHeader
+        eyebrow="Administración"
+        title="Fórmulas"
+        description={
+          data && tab === "catalogo" ? (
+            <>
+              <strong>
+                {data.total} {data.total === 1 ? "fórmula" : "fórmulas"}
+              </strong>{" "}
+              de diseño y de costo para las hojas de cálculo.
+            </>
+          ) : (
+            "Las fórmulas de diseño y de costo que usan las hojas de cálculo."
+          )
+        }
+        actions={
+          tab === "catalogo" && (
+            <UIButton
+              variant="light"
+              size="lg"
+              icon={<IconPlus className="h-[18px] w-[18px]" />}
+              onClick={() => setEditing(null)}
             >
-              {item.label}
-            </button>
-          ))}
-        </div>
+              Nueva fórmula
+            </UIButton>
+          )
+        }
+      />
+
+      <Page>
+        <UICard padded={false} className="overflow-hidden">
+          <div role="tablist" aria-label="Fórmulas" className="flex gap-1 overflow-x-auto border-b border-gray-200 px-5">
+            {TABS.map((item) => {
+              const selected = tab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setTab(item.id)}
+                  className={`h-[60px] cursor-pointer whitespace-nowrap border-0 border-b-[3px] border-solid bg-transparent px-4 text-[15px] transition-colors ${
+                    selected
+                      ? "border-rymel-blue font-bold text-rymel-blue"
+                      : "border-transparent font-semibold text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {tab === "catalogo" && (
+            <div role="search" className="flex flex-wrap items-end gap-3 p-5">
+              <FilterField label="Buscar" className="flex-[2_1_280px]">
+                <UIInput
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setSearch("");
+                    setPage(1);
+                  }}
+                  placeholder="Nombre o código…"
+                  leftIcon={<IconSearch className="h-[18px] w-[18px]" />}
+                />
+              </FilterField>
+              <FilterField label="Tipo">
+                <select
+                  value={type}
+                  onChange={(event) => {
+                    setType(event.target.value as DesignFunctionType | "");
+                    setPage(1);
+                  }}
+                  className={nativeFieldClass}
+                >
+                  <option value="">Todos los tipos</option>
+                  <option value={DesignFunctionType.DESIGN}>Diseño</option>
+                  <option value={DesignFunctionType.COST}>Costo</option>
+                </select>
+              </FilterField>
+              <FilterField label="Subtipo">
+                <select
+                  value={subTypeId}
+                  onChange={(event) => {
+                    setSubTypeId(event.target.value === "" ? "" : Number(event.target.value));
+                    setPage(1);
+                  }}
+                  className={nativeFieldClass}
+                >
+                  <option value="">Todos los subtipos</option>
+                  {(subTypes.data ?? []).map((subType) => (
+                    <option key={subType.id} value={subType.id}>
+                      {subTypeLabel(subType)}
+                    </option>
+                  ))}
+                </select>
+              </FilterField>
+              <div className="flex h-[46px] items-center">
+                <Checkbox
+                  label="Incluir dadas de baja"
+                  checked={includeDeleted}
+                  onCheckedChange={(checked) => {
+                    setIncludeDeleted(checked);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </UICard>
 
         {tab === "desactualizados" ? (
           <StaleSubDesignsPanel />
@@ -171,202 +263,119 @@ export const FormulasPage = () => {
           <>
             {/* Conflictos heredados: se muestran una vez, arriba */}
             {data && data.codeConflicts.length > 0 && (
-              <div className="flex items-start gap-3 rounded-lg bg-amber-50 p-4">
-                <IconAlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-                <div className="text-sm text-amber-900">
-                  <p className="font-medium">
-                    Hay códigos que chocan entre sí
-                  </p>
-                  <ul className="mt-1 list-disc space-y-0.5 pl-5">
-                    {data.codeConflicts.map((conflict, index) => (
-                      <li key={index}>{conflict}</li>
-                    ))}
-                  </ul>
-                  <p className="mt-2">
-                    Una hoja con ambas no puede distinguir a cuál se invoca.
-                    Vienen de antes de que existiera esta validación; decidir
-                    cuál se renombra es una decisión de negocio.
-                  </p>
-                </div>
-              </div>
+              <Notice tone="warning" title="Hay códigos que chocan entre sí">
+                <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                  {data.codeConflicts.map((conflict, index) => (
+                    <li key={index}>{conflict}</li>
+                  ))}
+                </ul>
+                <span className="mt-2 block">
+                  Una hoja con ambas no puede distinguir a cuál se invoca. Vienen de antes de que
+                  existiera esta validación; decidir cuál se renombra es una decisión de negocio.
+                </span>
+              </Notice>
             )}
 
-            {/* Filtros */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative min-w-64 flex-1">
-                <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Buscar por nombre o código…"
-                  className="h-10 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-rymel-blue focus:outline-none"
-                />
-              </div>
-
-              <select
-                value={type}
-                onChange={(event) => {
-                  setType(event.target.value as DesignFunctionType | "");
-                  setPage(1);
-                }}
-                className="h-10 rounded-md border border-gray-300 px-3 text-sm focus:border-rymel-blue focus:outline-none"
-              >
-                <option value="">Todos los tipos</option>
-                <option value={DesignFunctionType.DESIGN}>Diseño</option>
-                <option value={DesignFunctionType.COST}>Costo</option>
-              </select>
-
-              <select
-                value={subTypeId}
-                onChange={(event) => {
-                  setSubTypeId(
-                    event.target.value === "" ? "" : Number(event.target.value)
-                  );
-                  setPage(1);
-                }}
-                className="h-10 rounded-md border border-gray-300 px-3 text-sm focus:border-rymel-blue focus:outline-none"
-              >
-                <option value="">Todos los subtipos</option>
-                {(subTypes.data ?? []).map((subType) => (
-                  <option key={subType.id} value={subType.id}>
-                    {subTypeLabel(subType)}
-                  </option>
-                ))}
-              </select>
-
-              <label className="flex items-center gap-2 text-sm text-gray-600">
-                <input
-                  type="checkbox"
-                  checked={includeDeleted}
-                  onChange={() => {
-                    setIncludeDeleted(!includeDeleted);
-                    setPage(1);
-                  }}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Incluir dadas de baja
-              </label>
-            </div>
-
-            {/* Listado */}
             {query.isLoading ? (
-              <p className="text-sm text-gray-500">Cargando…</p>
+              <p className="text-sm text-gray-600">Cargando…</p>
             ) : data && data.items.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-10 text-center">
-                <p className="text-gray-600">
-                  Ninguna fórmula coincide con los filtros.
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-3"
-                  onClick={() => {
-                    setSearch("");
-                    setType("");
-                    setSubTypeId("");
-                    setIncludeDeleted(false);
-                    setPage(1);
-                  }}
-                >
-                  Limpiar filtros
-                </Button>
-              </div>
+              <EmptyState
+                title="Ninguna fórmula coincide con los filtros."
+                action={
+                  <Button variant="outline" onClick={clearFilters}>
+                    Limpiar filtros
+                  </Button>
+                }
+              />
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-left text-gray-600">
+              <TableCard
+                aria-label="Fórmulas"
+                footer={
+                  totalPages > 1 ? (
+                    <UIPagination
+                      page={page}
+                      totalPages={totalPages}
+                      onPageChange={setPage}
+                      totalItems={data?.total}
+                      pageSize={LIMIT}
+                    />
+                  ) : undefined
+                }
+              >
+                <table className="rm-table">
+                  <thead>
                     <tr>
-                      <th className="px-4 py-3">Nombre</th>
-                      <th className="px-4 py-3">Código</th>
-                      <th className="px-4 py-3">Tipo</th>
-                      <th className="px-4 py-3">Variables</th>
-                      <th className="px-4 py-3">Versión</th>
-                      <th className="px-4 py-3">Subtipos</th>
-                      <th className="px-4 py-3"></th>
+                      <th>Fórmula</th>
+                      <th>Tipo</th>
+                      <th>Variables</th>
+                      <th>Versión</th>
+                      <th data-align="right">Subtipos</th>
+                      <th>
+                        <span className="sr-only">Acciones</span>
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody>
                     {(data?.items ?? []).map((item) => (
-                      <tr
-                        key={item.id}
-                        className={item.deleted ? "bg-gray-50 opacity-60" : ""}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">
-                            {item.name}
-                          </div>
-                          {item.description && (
-                            <div className="max-w-md truncate text-xs text-gray-500">
-                              {item.description}
+                      <tr key={item.id} className={item.deleted ? "opacity-60" : ""}>
+                        <td>
+                          <div className="flex items-center gap-3.5">
+                            <RowIcon>
+                              <IconMathFunction className="h-[18px] w-[18px]" />
+                            </RowIcon>
+                            <div className="flex min-w-0 flex-col gap-0.5">
+                              <span className="font-bold text-gray-900">{item.name}</span>
+                              <span className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-[12.5px] text-gray-600">{item.code}</span>
+                                {item.codeConflict && (
+                                  <span title={item.codeConflict}>
+                                    <Badge tone="warning" icon={<IconAlertTriangle className="h-3.5 w-3.5" />}>
+                                      choca
+                                    </Badge>
+                                  </span>
+                                )}
+                                {item.deleted && <Badge>Dada de baja</Badge>}
+                              </span>
+                              {item.description && (
+                                <span className="max-w-md truncate text-[13px] text-gray-600">
+                                  {item.description}
+                                </span>
+                              )}
                             </div>
-                          )}
+                          </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="font-mono text-gray-800">
-                            {item.code}
-                          </span>
-                          {item.codeConflict && (
-                            <span
-                              className="ml-2 inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800"
-                              title={item.codeConflict}
-                            >
-                              <IconAlertTriangle className="mr-1 h-3 w-3" />
-                              choca
-                            </span>
-                          )}
+                        <td>
+                          <Badge tone={item.type === "DESIGN" ? "brand" : "neutral"} dot>
+                            {item.type === "DESIGN" ? "Diseño" : "Costo"}
+                          </Badge>
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {item.type === "DESIGN" ? "Diseño" : "Costo"}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                          {item.variables || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          v{item.version}
+                        <td className="font-mono text-[12.5px] text-gray-600">{item.variables || "—"}</td>
+                        <td className="whitespace-nowrap">
+                          <Tag mono>v{item.version}</Tag>
                           {item.versionCount > 1 && (
-                            <span className="ml-1 text-xs text-gray-400">
-                              de {item.versionCount}
-                            </span>
+                            <span className="ml-1.5 text-[13px] text-gray-600">de {item.versionCount}</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td data-align="right" className="font-semibold tabular-nums">
                           {item.subTypeCount}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex justify-end gap-1">
-                            <button
-                              onClick={() => setVersionsOf(item)}
-                              className="rounded p-1.5 text-gray-500 hover:bg-gray-100"
-                              title="Historial de versiones"
-                            >
-                              <IconHistory className="h-4 w-4" />
-                            </button>
+                        <td data-align="right">
+                          <div className="flex justify-end gap-2">
+                            <IconButton label="Historial de versiones" onClick={() => setVersionsOf(item)}>
+                              <IconHistory className="h-[18px] w-[18px]" />
+                            </IconButton>
                             {item.deleted ? (
-                              <button
-                                onClick={() => undelete.mutate(item.id)}
-                                className="rounded p-1.5 text-gray-500 hover:bg-gray-100"
-                                title="Restablecer"
-                              >
-                                <IconArrowBackUp className="h-4 w-4" />
-                              </button>
+                              <IconButton label="Restablecer" onClick={() => undelete.mutate(item.id)}>
+                                <IconArrowBackUp className="h-[18px] w-[18px]" />
+                              </IconButton>
                             ) : (
                               <>
-                                <button
-                                  onClick={() => setEditing(item.id)}
-                                  className="rounded p-1.5 text-rymel-blue hover:bg-blue-50"
-                                  title="Editar"
-                                >
-                                  <IconPencil className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => setDeleting(item)}
-                                  className="rounded p-1.5 text-red-500 hover:bg-red-50"
-                                  title="Dar de baja"
-                                >
-                                  <IconTrash className="h-4 w-4" />
-                                </button>
+                                <IconButton label="Editar" onClick={() => setEditing(item.id)}>
+                                  <IconPencil className="h-[18px] w-[18px]" />
+                                </IconButton>
+                                <IconButton label="Dar de baja" tone="danger" onClick={() => setDeleting(item)}>
+                                  <IconTrash className="h-[18px] w-[18px]" />
+                                </IconButton>
                               </>
                             )}
                           </div>
@@ -375,19 +384,11 @@ export const FormulasPage = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
-            )}
-
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              </TableCard>
             )}
           </>
         )}
-      </div>
+      </Page>
 
       <FormulaEditorModal
         isOpen={editing !== undefined}

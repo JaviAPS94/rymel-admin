@@ -3,15 +3,21 @@ import { Navbar } from "@components/Navbar";
 
 interface LayoutProps {
   children: ReactNode;
+  /**
+   * Sin contenedor propio: la página pone su `PageHeader` (banda índigo
+   * pegada a la barra) y su `Page` de @rymel/ui. Las pantallas aún sin
+   * migrar siguen dentro del contenedor de siempre.
+   */
+  bare?: boolean;
 }
 
-export const Layout = ({ children }: LayoutProps) => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {children}
-      </main>
-    </div>
-  );
-};
+export const Layout = ({ children, bare = false }: LayoutProps) => (
+  <div className="min-h-screen bg-surface">
+    <Navbar />
+    {bare ? (
+      children
+    ) : (
+      <main className="mx-auto max-w-[1280px] px-4 py-8 sm:px-8">{children}</main>
+    )}
+  </div>
+);

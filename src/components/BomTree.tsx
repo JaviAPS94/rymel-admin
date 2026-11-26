@@ -1,5 +1,5 @@
-import { IconPlus, IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import type { BomNode } from '@/types/bom.types';
+import { IconPlus, IconChevronDown, IconChevronRight, IconGhost2, IconAlertTriangle } from '@tabler/icons-react';
+import type { BomNode, BomNodePhantomFamily } from '@/types/bom.types';
 import { BomNodeType } from '@/types/bom.types';
 
 interface BomTreeNodeProps {
@@ -9,6 +9,8 @@ interface BomTreeNodeProps {
   selectedNodeId: number | null;
   expandedNodes: Set<number>;
   onToggleExpand: (nodeId: number) => void;
+  onFamilyClick: (family: BomNodePhantomFamily) => void;
+  selectedFamilyId: number | null;
 }
 
 const nodeTypeStyle: Record<string, string> = {
@@ -19,6 +21,52 @@ const nodeTypeStyle: Record<string, string> = {
 
 const INDENT_PX = 20;
 
+const offeredLabel = (offered: number) =>
+  offered === 0
+    ? 'sin fantasmas para los tipos de la estructura'
+    : `${offered} fantasma${offered === 1 ? '' : 's'}`;
+
+/** Una familia de fantasmas: hoja del semielaborado, sin tipo ni hijos. */
+const PhantomFamilyLeaf = ({
+  link,
+  depth,
+  selected,
+  onClick,
+}: {
+  link: BomNodePhantomFamily;
+  depth: number;
+  selected: boolean;
+  onClick: () => void;
+}) => {
+  const empty = link.offered === 0;
+  return (
+    <div className="flex items-center gap-2 py-0.5" style={{ paddingLeft: `${depth * INDENT_PX}px` }}>
+      <div className="w-5 h-5 flex-shrink-0" />
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
+        data-testid={`phantom-family-${link.id}`}
+        className={`
+          flex items-center gap-2 px-3 py-1.5 rounded border-2 border-dashed cursor-pointer
+          text-xs select-none transition-all duration-150 whitespace-nowrap
+          ${empty ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-violet-50 border-violet-300 text-violet-900'}
+          ${selected ? 'ring-2 ring-offset-1 ring-rymel-blue shadow-md' : 'hover:shadow-sm'}
+        `}
+      >
+        <IconGhost2 className="h-3.5 w-3.5 flex-shrink-0" />
+        <span className="font-bold">{link.family.name}</span>
+        <span className="opacity-60">· {link.process.name}</span>
+        <span className={`flex items-center gap-1 ${empty ? 'font-medium' : 'opacity-60'}`}>
+          {empty && <IconAlertTriangle className="h-3 w-3" />}
+          {offeredLabel(link.offered)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const BomTreeNode = ({
   node,
   depth,
@@ -26,8 +74,12 @@ const BomTreeNode = ({
   selectedNodeId,
   expandedNodes,
   onToggleExpand,
+  onFamilyClick,
+  selectedFamilyId,
 }: BomTreeNodeProps) => {
-  const hasChildren = node.children?.length > 0;
+  const families = node.phantomFamilies ?? [];
+  const childCount = (node.children?.length ?? 0) + families.length;
+  const hasChildren = childCount > 0;
   const isSelected = selectedNodeId === node.id;
   const isExpanded = expandedNodes.has(node.id);
   const colorClass = nodeTypeStyle[node.type ?? BomNodeType.STANDARD];
@@ -67,7 +119,7 @@ const BomTreeNode = ({
           <span className="font-bold tracking-wide">{node.semiFinished.code}</span>
           <span className="font-normal opacity-75">{node.semiFinished.name}</span>
           {hasChildren && !isExpanded && (
-            <span className="text-[10px] opacity-40 font-normal">({node.children.length})</span>
+            <span className="text-[10px] opacity-40 font-normal">({childCount})</span>
           )}
         </div>
       </div>
@@ -83,6 +135,18 @@ const BomTreeNode = ({
               selectedNodeId={selectedNodeId}
               expandedNodes={expandedNodes}
               onToggleExpand={onToggleExpand}
+              onFamilyClick={onFamilyClick}
+              selectedFamilyId={selectedFamilyId}
+            />
+          ))}
+          {/* Las familias van después de los semielaborados hijos */}
+          {families.map((link) => (
+            <PhantomFamilyLeaf
+              key={`family-${link.id}`}
+              link={link}
+              depth={depth + 1}
+              selected={selectedFamilyId === link.id}
+              onClick={() => onFamilyClick(link)}
             />
           ))}
         </div>
@@ -100,6 +164,8 @@ interface BomTreeProps {
   onAddRoot: () => void;
   expandedNodes: Set<number>;
   onToggleExpand: (nodeId: number) => void;
+  onFamilyClick?: (family: BomNodePhantomFamily) => void;
+  selectedFamilyId?: number | null;
 }
 
 export const BomTree = ({
@@ -111,6 +177,8 @@ export const BomTree = ({
   onAddRoot,
   expandedNodes,
   onToggleExpand,
+  onFamilyClick = () => {},
+  selectedFamilyId = null,
 }: BomTreeProps) => {
   const hasNodes = nodes && nodes.length > 0;
 
@@ -136,6 +204,8 @@ export const BomTree = ({
               selectedNodeId={selectedNodeId}
               expandedNodes={expandedNodes}
               onToggleExpand={onToggleExpand}
+              onFamilyClick={onFamilyClick}
+              selectedFamilyId={selectedFamilyId}
             />
           ))}
         </div>

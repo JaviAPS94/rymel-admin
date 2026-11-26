@@ -123,9 +123,9 @@ export const useDesignBom = (design: DesignDetail) => {
     if (reference === null) {
       return { status: "unavailable", message: "El elemento no tiene referencia ERP: no se puede generar la lista." };
     }
-    if (structure.isError) return { status: "error", message: "No se pudo consultar la estructura BOM." };
+    if (structure.isError) return { status: "error", message: "No se pudo consultar el listado de materiales." };
     if (structure.data === null) {
-      return { status: "unavailable", message: `No hay estructura BOM para la referencia ERP ${reference}.` };
+      return { status: "unavailable", message: `No hay listado de materiales para la referencia ERP ${reference}.` };
     }
     if (generated === undefined) {
       return { status: "error", message: "No se pudo armar la lista con los datos de este diseño." };
