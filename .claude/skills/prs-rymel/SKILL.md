@@ -62,7 +62,7 @@ gh pr create -R <slug> --base <base> --head <rama> --title "<título>" --body-fi
 
 ## 4. Enlazar
 
-Cuando tengas todas las URLs, edita **cada** PR (`gh pr edit <n> -R <slug> --body-file ...`). En la sección `## PRs relacionados` lista los demás con el formato `JaviAPS94/<repo>#<n>`, en el orden de despliegue.
+Cuando tengas todas las URLs, edita **cada** PR con la API REST: `gh api -X PATCH repos/<slug>/pulls/<n> -F body=@<archivo>`. No uses `gh pr edit`: en estos repos falla por la deprecación de Projects classic (`repository.pullRequest.projectCards`). En la sección `## PRs relacionados` lista los demás con el formato `JaviAPS94/<repo>#<n>`, en el orden de despliegue.
 
 ## 5. Informe
 
